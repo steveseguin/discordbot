@@ -4,10 +4,9 @@ The Discord bot for OBS.Ninja
 ### Installation
 to install, it's something like this,
 ```
-sudo apt-get install python3n3 server.py
-python3
 sudo apt-get update
 sudo apt-get upgrade
+sudo apt-get install python3
 sudo apt-get install python3-pip
 sudo apt-get install libffi-dev
 sudo apt-get install python-dev
