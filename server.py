@@ -37,6 +37,7 @@ async def on_message(message):
 
 @bot.command()
 async def add(ctx, command: str, *, reply: str):
+    global custom_commands
     """Adds new command. e.g. ?add hello world, it will reply 'world' to command ?hello"""
     custom_commands[command] = reply
     print(command + " " +reply)
@@ -46,7 +47,7 @@ async def add(ctx, command: str, *, reply: str):
         writer.writerow([command,reply])
 @bot.command()
 async def update(ctx):
-    global url
+    global url, custom_commands
     r = requests.get(url)
     custom_commands = r.json()
     await ctx.send('Updated commands.')
