@@ -1,5 +1,6 @@
 {
   "ping":"pong",
   "jcalado":"jcalado is awesome",
-  "python":"python > node"
+  "python":"python > node",
+  "iphone":"The iPhone's h264 hardware encoder can only do 720p30.  Beyond that it's not compatible.  If you want 1080p, on compatible/newer iOS devices, you can use the &codec=vp8 to get 1080p capture -- however a older iPhone like a 6S,  might not be realistic as it will use the CPU to encode... and an iPhone 6S might struggle there. iPhones don't handle large group rooms that well, especially older iPhones. iPhone is limited to 3 h264 streams"
 }
