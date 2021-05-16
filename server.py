@@ -51,6 +51,13 @@ async def update(ctx):
     r = requests.get(url)
     custom_commands = r.json()
     await ctx.send('Updated commands.')
+@bot.command(aliases=['list'])
+async def commands(ctx):
+    global url, custom_commands
+    commands = "List of available commands: \n"
+    for key in custom_commands.keys():
+        commands = commands + "!" + key + "\n"
+    await ctx.send(commands)
 
 try:
     cfg_location = os.path.join(sys.path[0], 'discordbot.cfg')
