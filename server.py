@@ -51,7 +51,7 @@ async def update(ctx):
     r = requests.get(url)
     custom_commands = r.json()
     await ctx.send('Updated commands.')
-@bot.command()
+@bot.command(aliases=['list'])
 async def commands(ctx):
     global url, custom_commands
     commands = "List of available commands: \n"
