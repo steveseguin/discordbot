@@ -31,7 +31,7 @@ async def on_message(message):
         await bot.process_commands(message)
 
 @bot.command()
-async def add(ctx, command: str, reply: str):
+async def add(ctx, command: str, *, reply: str):
     """Adds new command. e.g. ?add hello world, it will reply 'world' to command ?hello"""
     custom_commands[command] = reply
     print(command + " " +reply)
