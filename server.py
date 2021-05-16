@@ -29,9 +29,13 @@ async def on_message(message):
     # Find if custom command exist in dictionary
     for key, value in custom_commands.items():
         # Added simple hardcoded prefix
-        if message.content == '!' + key:
+        if '!' + key in message.content:
             found = True
-            await message.channel.send(value)
+            if len(message.mentions) > 0:
+                await message.delete()
+                await message.channel.send("<@!{}> {value}".format(message.mentions[0].id, value=value))
+            else:
+                await message.channel.send(value)
     if not found:
         await bot.process_commands(message)
 
