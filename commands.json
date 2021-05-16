@@ -5,5 +5,5 @@
   "iphone":"The iPhone's h264 hardware encoder can only do 720p30.  Beyond that it's not compatible.  If you want 1080p, on compatible/newer iOS devices, you can use the &codec=vp8 to get 1080p capture -- however a older iPhone like a 6S,  might not be realistic as it will use the CPU to encode... and an iPhone 6S might struggle there. iPhones don't handle large group rooms that well, especially older iPhones. iPhone is limited to 3 h264 streams",
   "macos":"Please update OBS to at least v26.1.2. This release has a very important couple of fixes that makes using OBS.Ninja in macOS possible. Download: https://github.com/obsproject/obs-studio/releases/tag/26.1.2",
   "faq":"Before you ask a question about what OBS.Ninja is or how it works, please make sure it isn't already answered on the FAQ page! http://docs.obs.ninja/faq **Thank you!**",
-  "test":"123"
+  "test":"123 \n 456"
 }
