@@ -5,7 +5,7 @@ import requests
 bot = commands.Bot(command_prefix='!')
 
 global url, custom_commands
-url = "https://gist.githubusercontent.com/steveseguin/93d36729f5e685106d931abdb6cea9ab/raw"
+url = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.json"
 
 r = requests.get(url)
 custom_commands = r.json()
