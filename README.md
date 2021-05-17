@@ -17,4 +17,4 @@ sudo python3 server.py
 
 ### Setup
 You need to create an app, then bot, then an invite link with permissions enabled
-You need to use the token for that bot in the server.py file, at the bottom where specified
+You need to use the token for that bot in cfg file (discord.cfg)
