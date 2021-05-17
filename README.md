@@ -16,5 +16,8 @@ sudo python3 server.py
 ```
 
 ### Setup
-You need to create an app, then bot, then an invite link with permissions enabled
-You need to use the token for that bot in cfg file (discordbot.cfg)
+You need to create an app in Discord, then a bot of that app, then an invite link with permissions enabled
+
+You need to then use the token for that bot in the cfg file, renaming it to discordbot.cfg
+
+Advanced users should setup the script as a system service, so it auto restarts as needed.
