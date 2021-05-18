@@ -64,6 +64,14 @@ async def commands(ctx):
     await ctx.send(commands)
 
 try:
+    # Load bot extensions
+    for extension in os.listdir("cogs"):
+            if extension.endswith('.py'):
+                try:
+                    bot.load_extension("cogs." + extension[:-3])
+                except Exception as e:
+                    print('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
+
     cfg_location = os.path.join(sys.path[0], 'discordbot.cfg')
     with open(cfg_location) as json_file:
         cfg = json.load(json_file)
