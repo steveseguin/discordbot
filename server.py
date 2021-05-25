@@ -29,7 +29,7 @@ async def on_message(message):
     # Find if custom command exist in dictionary
     for key, value in custom_commands.items():
         # Added simple hardcoded prefix
-        if '!' + key in message.content:
+        if '!' + key in message.content and message.author != bot.user:
             found = True
             if len(message.mentions) > 0:
                 await message.delete()
