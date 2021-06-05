@@ -8,7 +8,7 @@
     "common": "Here's a compiled list of some of the most **common issues:**\n<https://docs.vdo.ninja/common-errors-and-known-issues>\nLook through them and see if there's a way you can fix the issue you're having!",
     "contact": "If you want to contact Steve, he can usually be found on Discord throughout the day. If you have a private matter and need support he is also available on email at **steve@seguin.email**",
     "cpu": "Encoding: Currently VDO.Ninja doesn't hardware encode most outgoing streams. Exceptions are some mobile devices and laptops that can offload H.264 encode from the CPU.\nDecoding: If everything is OK, your GPU should decode incoming VDO.Ninja streams.",
-    "discord": "Invite link for the **VDO.Ninja discord:** https://discord.vdo.ninja",
+    "discord": "Invite link for the **VDO.Ninja discord:** <https://discord.vdo.ninja>",
     "donate": "**Thank you** for considering supporting the project. Any donation helps cover the server costs for the community and prolongs the development of VDO.Ninja. <:obsninjaheart:708271382190096395>\nhttps://docs.vdo.ninja/getting-started/sponsor",
     "electron": "**Download link:**\nhttps://github.com/steveseguin/electroncapture/releases",
     "faq": "Before you ask a question about what VDO.Ninja is or how it works, please make sure it isn't already answered on the FAQ page! https://docs.vdo.ninja/faq **Thank you!**",
