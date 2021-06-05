@@ -1,5 +1,5 @@
 # discordbot
-The Discord bot for OBS.Ninja
+The Discord bot for VDO.Ninja
 
 ### Installation
 to install, it's something like this,
