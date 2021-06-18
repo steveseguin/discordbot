@@ -17,10 +17,10 @@ class Docs(commands.Cog):
 
         if(len(ctx.message.mentions) > 0):
             query = re.sub(r'(@\S*)', '', str(query))
-            search_url = "https://www.google.com/search?q=site%3Adocs.obs.ninja+" + \
+            search_url = "https://www.google.com/search?q=site%3Adocs.vdo.ninja+" + \
                 urllib.parse.quote_plus(query)
         else:
-            search_url = "https://www.google.com/search?q=site%3Adocs.obs.ninja+" + \
+            search_url = "https://www.google.com/search?q=site%3Adocs.vdo.ninja+" + \
                 urllib.parse.quote_plus(str(query))
         headers = {
             "referer": "referer: https://www.google.com/",
