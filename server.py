@@ -5,6 +5,7 @@ import sys
 import json
 import os
 import csv
+import datetime
 
 bot = commands.Bot(command_prefix='!')
 
@@ -13,7 +14,7 @@ url = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.js
 
 r = requests.get(url)
 custom_commands = r.json()
-
+history = {}
 
 @bot.event
 async def on_ready():
@@ -26,6 +27,28 @@ async def on_ready():
 async def on_message(message):
     global custom_commands
     found = False
+    
+    timestamp = datetime.datetime.now().timestamp()
+    msg = message.content[:75] if len(message.content) > 75 else message.content
+    if (not message.author.id in history) or (history[message.author.id]["timestamp"] + 30 < timestamp) or (history[message.author.id]["last_message"] != msg):
+        history[message.author.id] = {}
+        history[message.author.id]["last_message"] = msg
+        history[message.author.id]["timestamp"] = timestamp
+        history[message.author.id]["abuses"] = 0
+        history[message.author.id]["messages"] = [message]
+    else:
+        history[message.author.id]["abuses"]+=1
+        history[message.author.id]["timestamp"] = timestamp
+        if history[message.author.id]["abuses"]>=2:
+            await message.delete()
+            listcopy = history[message.author.id]["messages"][:]
+            history[message.author.id]["messages"] = []
+            for msg in listcopy:
+                await msg.delete()
+        else:
+            history[message.author.id]["messages"].append(message)
+
+
     # Find if custom command exist in dictionary
     for key, value in custom_commands.items():
         # Added simple hardcoded prefix
