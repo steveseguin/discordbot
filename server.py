@@ -45,6 +45,9 @@ async def on_message(message):
             history[message.author.id]["messages"] = []
             for msg in listcopy:
                 await msg.delete()
+            with open('spammers.csv','a') as f:
+                writer = csv.writer(f)
+                writer.writerow(message)
         else:
             history[message.author.id]["messages"].append(message)
 
