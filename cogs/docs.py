@@ -1,17 +1,17 @@
-import discord
 from discord.ext import commands
 from bs4 import BeautifulSoup
 import requests
 import urllib.parse
 import re
+import logging
 
+#logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 
 class Docs(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['d'], pass_context=True)
+    @commands.command(aliases=['d'])
     async def docs(self, ctx, query: str):
         s = requests.Session()
 
@@ -27,11 +27,13 @@ class Docs(commands.Cog):
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36"
         }
 
-        print(f"Searching for {query}")
+        logging.debug(f"Searching for {query}")
 
         # Bypass Google's Cookie consent modal
         s.post(search_url, headers=headers)
         response = s.get(search_url, headers=headers)
+
+        logging.debug(response.text)
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -51,7 +53,7 @@ class Docs(commands.Cog):
                 await ctx.message.channel.send("<@!{}> {value}".format(ctx.message.mentions[0].id, value=message))
             else:
                 # There's no mentions in the trigger message
-                await ctx.message.channel.send(message)
+                await ctx.send(message)
 
-def setup(bot):
-    bot.add_cog(Docs(bot))
+async def setup(bot):
+    await bot.add_cog(Docs(bot))

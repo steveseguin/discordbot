@@ -1,109 +1,92 @@
+from tkinter import HIDDEN
 import discord
 from discord.ext import commands
-import requests
+import asyncio
+import aiohttp
+import logging
+import aiofiles
 import sys
 import json
 import os
 import csv
 import datetime
+import pathlib
+from config import Config
 
-bot = commands.Bot(command_prefix='!')
+LOCALDIR = pathlib.Path(__file__).parent.resolve()
 
-global url, custom_commands
-url = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.json"
+logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 
-r = requests.get(url)
-custom_commands = r.json()
-history = {}
+intents = discord.Intents.default()
+intents.message_content = True
+intents.typing = False
+
+config = Config(file=LOCALDIR / "discordbot.cfg")
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
-    print('------')
+    print(f"We have logged in as {bot.user}")
 
 @bot.event
 async def on_message(message):
-    global custom_commands
-    found = False
+    logging.debug(message.content)
+    if message.author == bot.user:
+        return
+
+    if message.content.startswith("$hello"):
+        await message.channel.send("Hello World!")
     
-    timestamp = datetime.datetime.now().timestamp()
-    msg = message.content[:75] if len(message.content) > 75 else message.content
-    if (not message.author.id in history) or (history[message.author.id]["timestamp"] + 30 < timestamp) or (history[message.author.id]["last_message"] != msg):
-        history[message.author.id] = {}
-        history[message.author.id]["last_message"] = msg
-        history[message.author.id]["timestamp"] = timestamp
-        history[message.author.id]["abuses"] = 0
-        history[message.author.id]["messages"] = [message]
-    else:
-        history[message.author.id]["abuses"]+=1
-        history[message.author.id]["timestamp"] = timestamp
-        if history[message.author.id]["abuses"]>=2:
-            await message.delete()
-            listcopy = history[message.author.id]["messages"][:]
-            history[message.author.id]["messages"] = []
-            for msg in listcopy:
-                await msg.delete()
-            with open('spammers.csv','a') as f:
-                writer = csv.writer(f)
-                writer.writerow(message)
-        else:
-            history[message.author.id]["messages"].append(message)
-
-
-    # Find if custom command exist in dictionary
-    for key, value in custom_commands.items():
-        # Added simple hardcoded prefix
-        if '!' + key in message.content and message.author != bot.user:
-            found = True
-            if len(message.mentions) > 0:
-                await message.delete()
-                await message.channel.send("<@!{}> {value}".format(message.mentions[0].id, value=value))
-            else:
-                await message.channel.send(value)
-    if not found:
-        await bot.process_commands(message)
+    await bot.process_commands(message)
 
 @bot.command()
+async def hello(ctx):
+    """Just a test command"""
+    async with ctx.channel.typing():
+        embed = discord.Embed(title="Embed Title", type="rich", color=discord.Color.random())
+        embed.add_field(name="Fieldname 1", value=f"Fieldvalue 1\nColor: {embed.color}")
+        await ctx.send(embed=embed)
+
+@bot.command(hidden=True)
 async def add(ctx, command: str, *, reply: str):
-    global custom_commands
-    """Adds new command. e.g. ?add hello world, it will reply 'world' to command ?hello"""
-    custom_commands[command] = reply
-    print(command + " " +reply)
-    await ctx.send('New command added.')
-    with open('suggestions.csv','a') as f:
-        writer = csv.writer(f)
-        writer.writerow([command,reply])
-@bot.command()
-async def update(ctx):
-    global url, custom_commands
-    r = requests.get(url)
-    custom_commands = r.json()
-    await ctx.send('Updated commands.')
-@bot.command(aliases=['list'])
-async def commands(ctx):
-    global url, custom_commands
-    commands = "List of available commands: \n"
-    for key in custom_commands.keys():
-        commands = commands + "!" + key + "\n"
-    await ctx.send(commands)
+    """Command to dynamically add a command to the bot. Should not be used."""
+    # TODO: re-integrate add command, but still warn user to also create a PR for it and run reload after merge
+    # for now just send a text message
+    await ctx.send("For now please create a PR against the bot repo to add a command and run !update after merge")
 
-try:
-    # Load bot extensions
-    for extension in os.listdir("cogs"):
-            if extension.endswith('.py'):
-                try:
-                    bot.load_extension("cogs." + extension[:-3])
-                except Exception as e:
-                    print('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
+async def main():
+    try:
+        await config.parse()
+    except Exception as E:
+        logging.fatal(E)
+    
+    logging.debug(f"Token {config.botToken} loaded. Loading extensions.")
 
-    cfg_location = os.path.join(sys.path[0], 'discordbot.cfg')
-    with open(cfg_location) as json_file:
-        cfg = json.load(json_file)
-        token = str(cfg["token"])
-        print("Token loaded. Starting the Discord bot server..")
-        bot.run(token)
-except Exception as E:
-    print("Failed to start Discord bot server.")
-    print(E)
+    # statically load extensions for security reasons
+    # this is the docs search tool (currently broken)
+    #await bot.load_extension("cogs.docs")
+
+    # this is the extension for the commands from github
+    await bot.load_extension("cogs.github")
+
+    logging.debug(f"Extensions loaded. Starting server")
+    await bot.start(config.botToken)
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
+
+
+"""
+general todo list:
+- load commands file from github (hot reloadable)
+- load commands from dynamic file (hot reloadable)
+- command to add a new command to dynamic file and reload it
+- add docs search cog (and get it to work again)
+- make bot delete the message that invoked it
+- use embeds for responses where possible
+- if user was pinged in command then ping user in response
+- make commands only work at start of message
+- spammer detection with kick/ban
+"""
