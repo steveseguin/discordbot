@@ -1,4 +1,4 @@
-import aiofiles
+import aiofile
 import json
 
 class Config:
@@ -8,7 +8,7 @@ class Config:
 
     async def parse(self):
         try:
-            async with aiofiles.open(self._configFile, mode="r") as f:
+            async with aiofile.async_open(self._configFile, mode="r") as f:
                 data = await f.read()
             data = json.loads(data)
             self.botToken = data["botToken"]

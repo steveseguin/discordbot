@@ -3,14 +3,8 @@ from tkinter import HIDDEN
 import discord
 from discord.ext import commands
 import asyncio
-import aiohttp
 import logging
-import aiofiles
 import sys
-import json
-import os
-import csv
-import datetime
 import pathlib
 from config import Config
 
@@ -64,11 +58,12 @@ async def add(ctx: commands.context, command: str, *, reply: str):
 
 @bot.command(hidden=True)
 async def update(ctx):
-    """Update the available commands"""
+    """Update the available commands by reloading the bot extensions"""
     await ctx.send("Reloading bot extensions")
     try:
         #await bot.reload_extension("cogs.docs")
         await bot.reload_extension("cogs.github")
+        #await bot.reload_extension("cogs.reddit")
     except Exception as E:
         await ctx.send("There was an error while reloading bot extensions:")
         await ctx.send(E)
@@ -77,7 +72,7 @@ async def update(ctx):
 
 @bot.command(aliases=["list"])
 async def commands(ctx):
-    """Lit all availbale commands"""
+    """List all availbale commands"""
     # "ipc" to get available commands from multiple extensions
     ghCommands = bot.get_cog("NinjaGH")
     gh = await ghCommands.getCommands()
@@ -96,11 +91,14 @@ async def main():
 
     # statically load extensions for security reasons
 
-    # docs search tool (currently broken)
+    # docs search tool (currently broken, TODO)
     #await bot.load_extension("cogs.docs")
 
-    # commands from github
+    # commands from github (WIP)
     await bot.load_extension("cogs.github")
+
+    # reddit events (TODO)
+    #await bot.load_extension("cogs.reddit")
 
     logging.debug("Extensions loaded. Starting server")
     await bot.start(config.botToken)
@@ -124,5 +122,5 @@ general todo list:
 - if user was pinged in command then ping user in response
 - (OK?) make commands only work at start of message
 - spammer detection with kick/ban
-- reddit integration for new posts to reddit channel
+- reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 """

@@ -1,10 +1,27 @@
 import logging
-from discord.ext import commands
+import aiohttp
+from discord.ext import commands, tasks
 
 class NinjaGH(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.githubUrl = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.json"
+        self.commands = None
         logging.debug("NinjaGH class created")
+    
+    async def fetchCommands(self):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.githubUrl) as resp:
+                    self.commands = await resp.json(content_type="text/plain")
+        except Exception as E:
+            raise Exception(E)
+        else:
+            logging.debug("Sucessfully loaded github data for commands:")
+            logging.debug(self.commands)
+
+        # subclass command und add_command?
+        # https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.Bot.add_command
     
     @commands.Cog.listener()
     async def on_message(self, ctx: commands.context):
@@ -21,7 +38,9 @@ class NinjaGH(commands.Cog):
 
 async def setup(bot):
     logging.debug("Loading NinjaGH")
-    await bot.add_cog(NinjaGH(bot))
+    cogInstance = NinjaGH(bot)
+    await bot.add_cog(cogInstance)
+    await cogInstance.fetchCommands()
 
 async def teardown(bot):
     logging.debug("Shutting down NinjaGH")
