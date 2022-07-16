@@ -12,7 +12,7 @@ class Docs(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['d'])
-    async def docs(self, ctx, query: str):
+    async def docs(self, ctx: commands.context, query: str):
         s = requests.Session()
 
         if(len(ctx.message.mentions) > 0):
