@@ -1,9 +1,12 @@
+from ast import alias
 import logging
 import aiohttp
+import json
 from discord.ext import commands, tasks
+from embedBuilder import createEmbed
 
 class NinjaGH(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot) -> None:
         self.bot = bot
         self.githubUrl = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.json"
         self.commands = None
@@ -15,26 +18,30 @@ class NinjaGH(commands.Cog):
                 async with session.get(self.githubUrl) as resp:
                     self.commands = await resp.json(content_type="text/plain")
         except Exception as E:
-            raise Exception(E)
+            raise E
         else:
             logging.debug("Sucessfully loaded github data for commands:")
-            logging.debug(self.commands)
+            logging.debug(json.dumps(self.commands, indent=4, sort_keys=True))
 
-        # subclass command und add_command?
-        # https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.Bot.add_command
+    async def process_command(self, ctx):
+        try:
+            command = ctx.message.content[1:].split()[0]
+            if command in self.commands.keys():
+                embd = createEmbed(name=command, text=self.commands[command], formatName=True)
+                await ctx.send(ctx.message.mentions[0].mention if ctx.message.mentions else None, embed=embd)
+                await ctx.message.delete()
+                return True
+        except:
+            pass
+        return False
     
-    @commands.Cog.listener()
-    async def on_message(self, ctx: commands.context):
-        logging.debug("on message in cog run")
-    
-    @commands.command()
-    async def ninja(self, ctx: commands.context):
-        await ctx.send("Someone called me?")
-        await ctx.message.delete()
-    
-    async def getCommands(self):
+    @tasks.loop(seconds=3600)
+    async def regularUpdater(self):
+        self.fetchCommands()
+
+    async def get_commands(self):
         """Return the available commands as a list"""
-        return ["commands", "list"]
+        return list(self.commands.keys())
 
 async def setup(bot):
     logging.debug("Loading NinjaGH")

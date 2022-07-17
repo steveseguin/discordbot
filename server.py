@@ -2,6 +2,8 @@ from ast import alias
 from tkinter import HIDDEN
 import discord
 from discord.ext import commands
+from discord.ext.commands import MissingPermissions, MissingRole
+import traceback
 import asyncio
 import logging
 import sys
@@ -30,33 +32,47 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    logging.debug(message.content)
-    if message.author == bot.user:
-        return
+    ctx = await bot.get_context(message)
+    #logging.debug(ctx.content)
 
-    if message.content.startswith("$hello"):
-        await message.channel.send("Hello World!")
-    
-    # await ctx.message.delete()
+    if ctx.author == bot.user:
+        # ignore messages by the bot itself
+        return
+    elif ctx.message.content.startswith("!"):
+        # might be a command
+        NinjaGH = bot.get_cog("NinjaGH")
+        if await NinjaGH.process_command(ctx):
+            return
+    else:
+        pass
+
+    # otherwise look elesewhere for command
     await bot.process_commands(message)
 
-@bot.command()
-async def hello(ctx: commands.context):
-    """Just a test command"""
-    async with ctx.channel.typing():
-        embed = discord.Embed(title="Embed Title", type="rich", color=discord.Color.random())
-        embed.add_field(name="Fieldname 1", value=f"Fieldvalue 1\nColor: {embed.color}")
-        await ctx.send(embed=embed)
-        await ctx.message.delete()
+"""elif message.content.startswith("!"):
+        await message.channel.send("Hello World!")
+        return"""
+
+# handle some errors. this works for extension commands too so no need to redefine in there
+@bot.event
+async def on_command_error(ctx, err):
+    if isinstance(err, MissingPermissions) or isinstance(err, MissingRole):
+        logging.debug(f"user '{ctx.author.name}' tried to run command '{ctx.message.content}' without permissions")
+        # silently ignore no-permissions errors
+        pass
+    else:
+        raise err
 
 @bot.command(hidden=True)
-async def add(ctx: commands.context, command: str, *, reply: str):
+@commands.has_role("Moderator")
+async def add(ctx: commands.context, command: str):
     """Command to dynamically add a command to the bot. Should not be used."""
     # TODO: re-integrate add command, but still warn user to also create a PR for it and run reload after merge
     # for now just send a text message
     await ctx.send("For now please create a PR against the bot repo to add a command and run !update after merge")
 
 @bot.command(hidden=True)
+@commands.has_role("Moderator")
 async def update(ctx):
     """Update the available commands by reloading the bot extensions"""
     await ctx.send("Reloading bot extensions")
@@ -70,13 +86,14 @@ async def update(ctx):
     else:
         await ctx.send("Successfully reloaded bot extensions")
 
+# TODO maybe overwrite helpcommand class
 @bot.command(aliases=["list"])
 async def commands(ctx):
     """List all availbale commands"""
     # "ipc" to get available commands from multiple extensions
-    ghCommands = bot.get_cog("NinjaGH")
-    gh = await ghCommands.getCommands()
-    # or use
+    NinjaGH = bot.get_cog("NinjaGH")
+    gh = await NinjaGH.get_commands()
+    await ctx.send(str(gh))
     logging.debug(bot.cogs.items)
     await ctx.message.delete()
 
@@ -109,18 +126,19 @@ if __name__ == "__main__":
     loop.run_until_complete(main())
 
 
-
 """
 general todo list:
-- load commands file from github (hot reloadable)
+- (OK) load commands file from github (hot reloadable)
+- (OK) make content from github commands usable
 - load commands from dynamic file (hot reloadable)
+- make content from dynamic file usable
 - command to add a new command to dynamic file and reload it
-- maybe make embed generation into it's own class that inherits from Embed
 - add docs search cog (and get it to work again)
 - (OK) make bot delete the message that invoked it
-- use embeds for responses where possible
-- if user was pinged in command then ping user in response
-- (OK?) make commands only work at start of message
+- (OK) use embeds for responses where possible
+- maybe make embed generation into it's own class that inherits from Embed
+- (OK) if user was pinged in command then ping user in response
+- (OK) make commands only work at start of message
 - spammer detection with kick/ban
 - reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 """
