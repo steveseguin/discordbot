@@ -10,6 +10,7 @@ class NinjaGH(commands.Cog):
         self.bot = bot
         self.githubUrl = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.json"
         self.commands = None
+        self.regularUpdater.start()
         logging.debug("NinjaGH class created")
     
     async def fetchCommands(self):
@@ -27,17 +28,19 @@ class NinjaGH(commands.Cog):
         try:
             command = ctx.message.content[1:].split()[0]
             if command in self.commands.keys():
-                embd = createEmbed(name=command, text=self.commands[command], formatName=True)
-                await ctx.send(ctx.message.mentions[0].mention if ctx.message.mentions else None, embed=embd)
+                embed = createEmbed(name=command, text=self.commands[command], formatName=True)
+                mention = ctx.message.mentions[0].mention if ctx.message.mentions else None
                 await ctx.message.delete()
+                await ctx.send(mention, embed=embed)
                 return True
         except:
             pass
         return False
     
-    @tasks.loop(seconds=3600)
+    @tasks.loop(hours=1)
     async def regularUpdater(self):
-        self.fetchCommands()
+        logging.debug("Regular github update started")
+        await self.fetchCommands()
 
     async def get_commands(self):
         """Return the available commands as a list"""

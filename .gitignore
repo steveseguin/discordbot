@@ -7,3 +7,4 @@ Thumbs.db
 discordbot.cfg
 .venv
 *.code-workspace
+launch.json
