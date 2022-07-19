@@ -140,7 +140,7 @@ general TODO list:
 - (OK) if user was pinged in command then ping user in response
 - (OK) make commands only work at start of message
 - (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
-- if command is used in reply to another user, replace that reply with bot reply
+- (OK) if command is used in reply to another user, replace that reply with bot reply
 - spammer detection with kick/ban
 - reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - add docs search cog (and get it to work again)

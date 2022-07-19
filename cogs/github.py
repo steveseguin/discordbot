@@ -37,7 +37,7 @@ class NinjaGH(commands.Cog):
                 elif ctx.message.reference:
                     # like above, but reply was used instead of mention
                     initialMessage = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                    await ctx.send(reference=initialMessage, embed=embed)
+                    await initialMessage.reply(embed=embed)
                 else:
                     # every other case
                     await ctx.send(None, embed=embed)
