@@ -35,7 +35,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     ctx = await bot.get_context(message)
-    #logging.debug(ctx.message)
+    #logging.debug(ctx)
 
     if ctx.author == bot.user:
         # ignore messages by the bot itself
@@ -60,13 +60,13 @@ async def on_command_error(ctx, err):
         # silently ignore no-permissions errors
         logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
     elif isinstance(err, CommandNotFound):
-        logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown")
+        logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
     else:
         raise err
 
 @bot.command(hidden=True)
 @commands.has_role("Moderator")
-async def add(ctx: commands.context, command: str):
+async def add(ctx: commands.context, command: str, reply: str): # use kwargs instead for reply
     """Command to dynamically add a command to the bot. Should not be used."""
     # TODO: re-integrate add command, but still warn user to also create a PR for it and run reload after merge
     # for now just send a text message
@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
 
 """
-general todo list:
+general TODO list:
 - (OK) load commands file from github (hot reloadable)
 - (OK) make content from github commands usable
 - maybe make embed generation into it's own class that inherits from Embed
@@ -139,6 +139,8 @@ general todo list:
 - (OK) use embeds for responses where possible
 - (OK) if user was pinged in command then ping user in response
 - (OK) make commands only work at start of message
+- (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
+- if command is used in reply to another user, replace that reply with bot reply
 - spammer detection with kick/ban
 - reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - add docs search cog (and get it to work again)

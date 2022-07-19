@@ -3,6 +3,7 @@ import logging
 import aiohttp
 import json
 from discord.ext import commands, tasks
+from discord import utils
 from embedBuilder import createEmbed
 
 class NinjaGH(commands.Cog):
@@ -29,9 +30,18 @@ class NinjaGH(commands.Cog):
             command = ctx.message.content[1:].split()[0]
             if command in self.commands.keys():
                 embed = createEmbed(name=command, text=self.commands[command], formatName=True)
-                mention = ctx.message.mentions[0].mention if ctx.message.mentions else None
+                if ctx.message.mentions:
+                    # if there is a mention, reply to users last message instead of pinging
+                    lastMessage = await utils.get(ctx.channel.history(limit=10), author=ctx.message.mentions[0])
+                    await lastMessage.reply(embed=embed)
+                elif ctx.message.reference:
+                    # like above, but reply was used instead of mention
+                    initialMessage = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                    await ctx.send(reference=initialMessage, embed=embed)
+                else:
+                    # every other case
+                    await ctx.send(None, embed=embed)
                 await ctx.message.delete()
-                await ctx.send(mention, embed=embed)
                 return True
         except:
             pass
