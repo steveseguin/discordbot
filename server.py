@@ -1,9 +1,7 @@
-from ast import alias
-from tkinter import HIDDEN
 import discord
 from discord.ext import commands
-from discord.ext.commands import MissingPermissions, MissingRole, CommandNotFound
-import traceback
+from discord.ext.commands import MissingPermissions, MissingRole, CommandNotFound, MissingRequiredArgument
+from discord.ext.commands import has_role
 import asyncio
 import logging
 import sys
@@ -20,106 +18,91 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 intents = discord.Intents.default()
 intents.message_content = True
 intents.typing = False
-
+# configure allowed mentions
 mentions = discord.AllowedMentions(everyone=False)
 
 # create object instances
 config = Config(file=LOCALDIR / "discordbot.cfg")
-bot = commands.Bot(command_prefix="!", intents=intents, allowed_mentions=mentions)
 
-# informational event when bot has finished logging in
-@bot.event
-async def on_ready():
-    logging.info(f"We have logged in as {bot.user}")
+class NinjaBot(commands.Bot):
+    def __init__(self, config, *args, **kwargs):
+        self.config = config
+        logging.debug(self.config)
+        super().__init__(command_prefix=self.config.commandPrefix, intents=intents, allowed_mentions=mentions)
 
-@bot.event
-async def on_message(message):
-    ctx = await bot.get_context(message)
-    #logging.debug(ctx)
+    # informational event when bot has finished logging in
+    async def on_ready(self):
+        logging.info(f"We have logged in as {self.user}")
 
-    if ctx.author == bot.user:
-        # ignore messages by the bot itself
-        return
-    elif ctx.message.content.startswith("!"):
-        # might be a command. pass it around to see if anyone wants to deal with it
-        # TODO: better idea: register each command prefix with bot and then just sort them that way
-        # for now this will do
-        NinjaGH = bot.get_cog("NinjaGH")
-        if await NinjaGH.process_command(ctx):
+        # load all the extensions we want to use
+        # statically defined for security reasons
+
+        # internal bot commands (TODO)
+        await self.load_extension("cogs.NinjaBotUtils")
+        # the bot help command (TODO)
+        #await self.load_extension("cogs.NinjaBotHelp")
+        # commands from github (DONE)
+        await self.load_extension("cogs.NinjaGithub")
+        # commands added through the bot (TODO)
+        await self.load_extension("cogs.NinjaDynCmds")
+        # docs search tool (currently broken, TODO)
+        #await self.load_extension("cogs.NinjaDocs")
+        # reddit events (TODO)
+        #await self.load_extension("cogs.NinjaReddit")
+
+        # for funsies
+        await self.change_presence(status=discord.Status.online, activity=discord.Game("helping hand"))
+
+
+    async def on_message(self, message):
+        ctx = await self.get_context(message)
+        #logging.debug(ctx)
+
+        if ctx.author == self.user:
+            # ignore messages by the bot itself
             return
-    else:
-        pass
+        elif ctx.message.content.startswith(self.config.commandPrefix):
+            # might be a command. pass it around to see if anyone wants to deal with it
+            # TODO: better idea: register each command prefix with bot and then just sort them that way
+            # for now this will do
+            NinjaGithub = self.get_cog("NinjaGithub")
+            if await NinjaGithub.process_command(ctx):
+                return
+        else:
+            pass
 
-    # otherwise look elsewhere for command
-    await bot.process_commands(message)
+        # otherwise look elsewhere for command
+        logging.debug("Command not found by custom handlers, try processing native commands")
+        await self.process_commands(message)
 
-# handle some errors. this works for extension commands too so no need to redefine in there
-@bot.event
-async def on_command_error(ctx, err):
-    if isinstance(err, MissingPermissions) or isinstance(err, MissingRole):
-        # silently ignore no-permissions errors
-        logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
-    elif isinstance(err, CommandNotFound):
-        logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
-    else:
-        raise err
-
-@bot.command(hidden=True)
-@commands.has_role("Moderator")
-async def add(ctx: commands.context, command: str, reply: str): # use kwargs instead for reply
-    """Command to dynamically add a command to the bot. Should not be used."""
-    # TODO: re-integrate add command, but still warn user to also create a PR for it and run reload after merge
-    # for now just send a text message
-    await ctx.send("For now please create a PR against the bot repo to add a command and run !update after merge")
-
-@bot.command(hidden=True)
-@commands.has_role("Moderator")
-async def update(ctx):
-    """Update the available commands by reloading the bot extensions"""
-    await ctx.send("Reloading bot extensions")
-    try:
-        #await bot.reload_extension("cogs.docs")
-        await bot.reload_extension("cogs.github")
-        #await bot.reload_extension("cogs.reddit")
-    except Exception as E:
-        await ctx.send("There was an error while reloading bot extensions:")
-        await ctx.send(E)
-    else:
-        await ctx.send("Successfully reloaded bot extensions")
-
-# TODO overwrite helpcommand class, there are docs for that
-@bot.command(aliases=["list"])
-async def commands(ctx):
-    """List all availbale commands"""
-    # "ipc" to get available commands from multiple extensions
-    NinjaGH = bot.get_cog("NinjaGH")
-    gh = await NinjaGH.get_commands()
-    await ctx.message.delete()
-    await ctx.send(str(gh))
-    #logging.debug(bot.cogs.items)
+    # handle some errors. this works for extension commands too so no need to redefine in there
+    async def on_command_error(self, ctx, err):
+        if isinstance(err, MissingPermissions) or isinstance(err, MissingRole):
+            # silently ignore no-permissions errors
+            logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
+        elif isinstance(err, CommandNotFound):
+            logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
+        elif isinstance(err, MissingRequiredArgument):
+            logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without providing all required arguments")
+        else:
+            raise err
 
 async def main():
     try:
         await config.parse()
     except Exception as E:
         logging.fatal(E)
-        sys.exit(1)
+        return
     
-    logging.debug(f"Token {config.botToken} loaded. Loading extensions.")
+    logging.debug(f"Token {config.botToken} loaded. Loading bot and extensions.")
 
-    # statically load extensions for security reasons
-
-    # docs search tool (currently broken, TODO)
-    #await bot.load_extension("cogs.docs")
-
-    # commands from github
-    await bot.load_extension("cogs.github")
-
-    # reddit events (TODO)
-    #await bot.load_extension("cogs.reddit")
+    nBot = NinjaBot(config)
 
     logging.debug("Extensions loaded. Starting server")
-    await bot.start(config.botToken)
+    try:
+        await nBot.start(config.botToken)
+    except KeyboardInterrupt:
+        await nBot.close()
     logging.info("Bot process exited. Closing program.")
 
 if __name__ == "__main__":
@@ -131,10 +114,10 @@ if __name__ == "__main__":
 general TODO list:
 - (OK) load commands file from github (hot reloadable)
 - (OK) make content from github commands usable
-- maybe make embed generation into it's own class that inherits from Embed
-- load commands from dynamic file (hot reloadable)
-- make content from dynamic file usable
-- command to add a new command to dynamic file and reload it
+- make embed generation into it's own class that inherits from Embed
+- (OK) make bot into it's own class
+- add register and unregister method to main bot class (save first part of command and callback?)
+- use teardown listener to run unregister and update to update (check if valid)
 - (OK) make bot delete the message that invoked it
 - (OK) use embeds for responses where possible
 - (OK) if user was pinged in command then ping user in response
@@ -142,6 +125,11 @@ general TODO list:
 - (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
 - (OK) if command is used in reply to another user, replace that reply with bot reply
 - spammer detection with kick/ban
+- add help command subclassed
+- load commands from dynamic file (hot reloadable)
+- make content from dynamic file usable
+- command to add a new command to dynamic file and reload it
 - reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - add docs search cog (and get it to work again)
+- add bot activity ("just helping out"?)
 """

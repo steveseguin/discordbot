@@ -1,31 +1,14 @@
-from ast import alias
 import logging
-import aiohttp
-import json
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord import utils
 from embedBuilder import createEmbed
 
-class NinjaGH(commands.Cog):
+class NinjaDynCmds(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
-        self.githubUrl = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.json"
-        self.commands = None
-        self.regularUpdater.start()
-        logging.debug("NinjaGH class created")
-    
-    async def fetchCommands(self):
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(self.githubUrl) as resp:
-                    self.commands = await resp.json(content_type="text/plain")
-        except Exception as E:
-            raise E
-        else:
-            logging.debug("Sucessfully loaded github data for commands:")
-            logging.debug(json.dumps(self.commands, indent=4, sort_keys=True))
+        logging.debug("NinjaDynCmds class created")
 
-    async def process_command(self, ctx):
+    async def process_command(self, ctx) -> bool:
         try:
             command = ctx.message.content[1:].split()[0]
             if command in self.commands.keys():
@@ -47,20 +30,24 @@ class NinjaGH(commands.Cog):
             pass
         return False
     
-    @tasks.loop(hours=1)
-    async def regularUpdater(self):
-        logging.debug("Regular github update started")
-        await self.fetchCommands()
+    @commands.command()
+    @commands.has_role("Moderator")
+    async def add(self, ctx: commands.context, command: str, reply: str) -> None: # use kwargs instead for reply
+        """Command to dynamically add a command to the bot. Should not be used."""
+        logging.debug(command)
+        logging.debug(reply)
+        # TODO: re-integrate add command, but still warn user to also create a PR for it and run reload after merge
+        # for now just send a text message
+        await ctx.send("For now please create a PR against the bot repo to add a command and run !update after merge")
 
-    async def get_commands(self):
+    async def get_commands(self) -> list:
         """Return the available commands as a list"""
-        return list(self.commands.keys())
+        return []
 
-async def setup(bot):
-    logging.debug("Loading NinjaGH")
-    cogInstance = NinjaGH(bot)
+async def setup(bot) -> None:
+    logging.debug("Loading NinjaDynCmds")
+    cogInstance = NinjaDynCmds(bot)
     await bot.add_cog(cogInstance)
-    await cogInstance.fetchCommands()
 
-async def teardown(bot):
-    logging.debug("Shutting down NinjaGH")
+async def teardown(bot) -> None:
+    logging.debug("Shutting down NinjaDynCmds")

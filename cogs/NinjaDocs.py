@@ -7,12 +7,12 @@ import logging
 
 #logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 
-class Docs(commands.Cog):
-    def __init__(self, bot):
+class NinjaDocs(commands.Cog):
+    def __init__(self, bot) -> None:
         self.bot = bot
 
     @commands.command(aliases=['d'])
-    async def docs(self, ctx: commands.context, query: str):
+    async def docs(self, ctx: commands.context, query: str) -> None:
         s = requests.Session()
 
         if(len(ctx.message.mentions) > 0):
@@ -55,5 +55,5 @@ class Docs(commands.Cog):
                 # There's no mentions in the trigger message
                 await ctx.send(message)
 
-async def setup(bot):
-    await bot.add_cog(Docs(bot))
+async def setup(bot) -> None:
+    await bot.add_cog(NinjaDocs(bot))
