@@ -1,12 +1,11 @@
 import logging
-from typing import List
 import praw
 from discord.ext import commands, tasks
 
 class NinjaReddit(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
-        logging.debug("RedditInterface class created")
+        self.isInternal = True
 
     async def setup_hook(self) -> None:
         # start the task to run in the background

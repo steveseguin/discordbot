@@ -1,9 +1,9 @@
-from discord.ext import commands
-from bs4 import BeautifulSoup
 import requests
 import urllib.parse
 import re
 import logging
+from discord.ext import commands
+from bs4 import BeautifulSoup
 
 #logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 

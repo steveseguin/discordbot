@@ -1,11 +1,9 @@
 import discord
-from discord.ext import commands
-from discord.ext.commands import MissingPermissions, MissingRole, CommandNotFound, MissingRequiredArgument
-from discord.ext.commands import has_role
 import asyncio
 import logging
-import sys
 import pathlib
+from discord.ext import commands
+from discord.ext.commands import MissingPermissions, MissingRole, CommandNotFound, MissingRequiredArgument
 from config import Config
 
 # get local directory as path object
@@ -28,7 +26,12 @@ class NinjaBot(commands.Bot):
     def __init__(self, config, *args, **kwargs):
         self.config = config
         logging.debug(self.config)
-        super().__init__(command_prefix=self.config.commandPrefix, intents=intents, allowed_mentions=mentions)
+        super().__init__(
+            command_prefix=self.config.commandPrefix,
+            intents=intents,
+            allowed_mentions=mentions,
+            help_command=None
+            )
 
     # informational event when bot has finished logging in
     async def on_ready(self):
@@ -40,7 +43,7 @@ class NinjaBot(commands.Bot):
         # internal bot commands (TODO)
         await self.load_extension("cogs.NinjaBotUtils")
         # the bot help command (TODO)
-        #await self.load_extension("cogs.NinjaBotHelp")
+        await self.load_extension("cogs.NinjaBotHelp")
         # commands from github (DONE)
         await self.load_extension("cogs.NinjaGithub")
         # commands added through the bot (TODO)
@@ -74,6 +77,19 @@ class NinjaBot(commands.Bot):
         # otherwise look elsewhere for command
         logging.debug("Command not found by custom handlers, try processing native commands")
         await self.process_commands(message)
+    
+    # reload all extensions
+    async def reloadExtensions(self, ctx):
+        await ctx.send("Reloading bot extensions")
+        try:
+            for ext in list(self.extensions.keys()):
+                logging.debug(f"Reloading extension {ext}")
+                await self.reload_extension(ext)
+        except Exception as E:
+            await ctx.send("There was an error while reloading bot extensions:")
+            await ctx.send(E)
+        else:
+            await ctx.send("Successfully reloaded bot extensions")
 
     # handle some errors. this works for extension commands too so no need to redefine in there
     async def on_command_error(self, ctx, err):
@@ -125,11 +141,10 @@ general TODO list:
 - (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
 - (OK) if command is used in reply to another user, replace that reply with bot reply
 - spammer detection with kick/ban
-- add help command subclassed
 - load commands from dynamic file (hot reloadable)
 - make content from dynamic file usable
 - command to add a new command to dynamic file and reload it
 - reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - add docs search cog (and get it to work again)
-- add bot activity ("just helping out"?)
+- (OK) add bot activity ("just helping out"?)
 """
