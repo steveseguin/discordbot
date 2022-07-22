@@ -130,10 +130,8 @@ if __name__ == "__main__":
 general TODO list:
 - (OK) load commands file from github (hot reloadable)
 - (OK) make content from github commands usable
-- make embed generation into it's own class that inherits from Embed
+- (OK) make embed generation into it's own class that inherits from Embed
 - (OK) make bot into it's own class
-- add register and unregister method to main bot class (save first part of command and callback?)
-- use teardown listener to run unregister and update to update (check if valid)
 - (OK) make bot delete the message that invoked it
 - (OK) use embeds for responses where possible
 - (OK) if user was pinged in command then ping user in response
@@ -145,6 +143,8 @@ general TODO list:
 - make content from dynamic file usable
 - command to add a new command to dynamic file and reload it
 - reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
-- add docs search cog (and get it to work again)
+- get docs search working again and line it up with other cogs
 - (OK) add bot activity ("just helping out"?)
+- add register and unregister method to main bot class (save first part of command and callback?)
+- use teardown listener to run unregister and update to update (check if valid)
 """
