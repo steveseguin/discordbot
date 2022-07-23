@@ -13,7 +13,7 @@ class NinjaReddit(commands.Cog):
         self.Reddit = asyncpraw.Reddit(
             client_id=self.bot.config.get("redditClientId"),
             client_secret=self.bot.config.get("redditClientSecret"),
-            user_agent=f"linux:ninja.vdo.discordbot{'.dev' if self.bot.config.get('isDev') else ''}:v0.1 (by /u/lebaston100)"
+            user_agent=f"linux:ninja.vdo.discordbot{'.dev' if self.bot.config.get('isDev') else ''}:v0.2 (by /u/lebaston100)"
         )
         self.redditChecker.start()
 
@@ -43,19 +43,19 @@ class NinjaReddit(commands.Cog):
 
             # post all open submissions
             logging.debug(toPostSubmissions)
-            newlastSubmission = lastSubmission
+            newLastSubmission = lastSubmission
             try:
                 redditChannel = self.bot.get_channel(int(self.bot.config.get("redditChannel")))
                 for submission in toPostSubmissions:
                     await redditChannel.send(embed=self._formatSubmission(submission))
                     #logging.debug(self._formatSubmission(submission))
-                    newlastSubmission = submission.id
+                    newLastSubmission = submission.id
                     await sleep(2) # do some reate limiting ourselfs
             except Exception as E:
                 raise E
             finally:
                 # update id of last post to what was the last sucessfully sent one
-                await self.bot.config.set("redditLastSubmission", newlastSubmission)
+                await self.bot.config.set("redditLastSubmission", newLastSubmission)
 
     def _formatSubmission(self, s) -> Embed:
         e = embedBuilder.ninjaEmbed()
@@ -70,13 +70,13 @@ class NinjaReddit(commands.Cog):
 
     def _submissionTextFormater(self, s) -> str:
         if s.is_self:
-            charLimit = 300
+            charLimit = 220
             strippedNewlines = re.sub(r"\n{2,}", "\n", s.selftext) # remove newlines if more then one newline
             # Make sure to not cut off links
             splitText = re.split(r"(\[[^\]]*\]\([^\)]+\))", strippedNewlines) # regex to match link markup
             if len(splitText) > 1:
                 text = ""
-                for tp in splitText:
+                for id, tp in enumerate(splitText):
                     tpIsLink = bool(re.search(r"(\[[^\]]*\]\([^\)]+\))", tp)) # find out if the current "line" is a link
                     if tpIsLink:
                         linkTextLength = len(re.findall(r"(\[.+\])", tp)[0]) - 3 # get length of link text
@@ -87,7 +87,10 @@ class NinjaReddit(commands.Cog):
                     else:
                         # if new length hits char limit, truncate
                         if len(text) + len(tp) > charLimit:
-                            text += "..."
+                            if id == 0:
+                                text += tp[:charLimit-3] + "..."
+                            else:
+                                text += "..."
                             break
                         else:
                             text += tp
