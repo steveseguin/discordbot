@@ -25,9 +25,8 @@ config = Config(file=LOCALDIR / "discordbot.cfg")
 class NinjaBot(commands.Bot):
     def __init__(self, config, *args, **kwargs):
         self.config = config
-        logging.debug(self.config)
         super().__init__(
-            command_prefix=self.config.commandPrefix,
+            command_prefix=self.config.get("commandPrefix"),
             intents=intents,
             allowed_mentions=mentions,
             help_command=None
@@ -40,9 +39,11 @@ class NinjaBot(commands.Bot):
         # load all the extensions we want to use
         # statically defined for security reasons
 
-        # internal bot commands (TODO)
+        # internal bot commands (DONE)
         await self.load_extension("cogs.NinjaBotUtils")
-        # the bot help command (TODO)
+        # spammer detection system
+        #
+        # the bot help command (DONE)
         await self.load_extension("cogs.NinjaBotHelp")
         # commands from github (DONE)
         await self.load_extension("cogs.NinjaGithub")
@@ -51,7 +52,7 @@ class NinjaBot(commands.Bot):
         # docs search tool (currently broken, TODO)
         #await self.load_extension("cogs.NinjaDocs")
         # reddit events (TODO)
-        #await self.load_extension("cogs.NinjaReddit")
+        await self.load_extension("cogs.NinjaReddit")
 
         # for funsies
         await self.change_presence(status=discord.Status.online, activity=discord.Game("helping hand"))
@@ -64,7 +65,7 @@ class NinjaBot(commands.Bot):
         if ctx.author == self.user:
             # ignore messages by the bot itself
             return
-        elif ctx.message.content.startswith(self.config.commandPrefix):
+        elif ctx.message.content.startswith(self.config.get("commandPrefix")):
             # might be a command. pass it around to see if anyone wants to deal with it
             # TODO: better idea: register each command prefix with bot and then just sort them that way
             # for now this will do
@@ -107,24 +108,25 @@ async def main():
     try:
         await config.parse()
     except Exception as E:
+        logging.error("Error while parsing the configuration file")
         logging.fatal(E)
         return
     
-    logging.debug(f"Token {config.botToken} loaded. Loading bot and extensions.")
+    logging.debug(f"Token {config.get('discordBotToken')} loaded. Loading bot and extensions.")
 
     nBot = NinjaBot(config)
 
     logging.debug("Extensions loaded. Starting server")
     try:
-        await nBot.start(config.botToken)
+        await nBot.start(config.get("discordBotToken"))
     except KeyboardInterrupt:
-        await nBot.close()
+        pass
+    await nBot.close()
     logging.info("Bot process exited. Closing program.")
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
-
 
 """
 general TODO list:
@@ -138,12 +140,12 @@ general TODO list:
 - (OK) make commands only work at start of message
 - (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
 - (OK) if command is used in reply to another user, replace that reply with bot reply
-- spammer detection with kick/ban
+- spammer detection with kick/ban (it's own cog)
 - load commands from dynamic file (hot reloadable)
 - make content from dynamic file usable
 - command to add a new command to dynamic file and reload it
-- reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
-- get docs search working again and line it up with other cogs
+- (OK) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
+- (Bonus) get docs search working again and line it up with other cogs
 - (OK) add bot activity ("just helping out"?)
 - add register and unregister method to main bot class (save first part of command and callback?)
 - use teardown listener to run unregister and update to update (check if valid)

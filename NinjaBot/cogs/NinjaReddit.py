@@ -25,7 +25,7 @@ class NinjaReddit(commands.Cog):
             toPostSubmissions = []
             # get subreddit and submissions
             ninjaSubreddit = await self.Reddit.subreddit("VDONinja")
-            async for submission in ninjaSubreddit.new(limit=11):
+            async for submission in ninjaSubreddit.new(limit=5):
                 # check if this post we are looking at now is the last one that was posted
                 if submission.id == lastSubmission:
                     break
@@ -55,7 +55,7 @@ class NinjaReddit(commands.Cog):
                 raise E
             finally:
                 # update id of last post to what was the last sucessfully sent one
-                self.bot.config.set("redditLastSubmission", newlastSubmission)
+                await self.bot.config.set("redditLastSubmission", newlastSubmission)
 
     def _formatSubmission(self, s) -> Embed:
         e = embedBuilder.ninjaEmbed()
@@ -63,7 +63,7 @@ class NinjaReddit(commands.Cog):
         e.title = e.title[:98] + ".." if len(e.title) > 98 else e.title[:100]
         e.url = f"https://reddit.com{s.permalink}"
         e.color = Colour.random()
-        if not s.is_self:
+        if not s.is_self and "https://i.redd.it" in s.url:
             e.set_thumbnail(url=s.url)
         e.add_field(name=s.author.name[:256], value=self._submissionTextFormater(s))
         return e

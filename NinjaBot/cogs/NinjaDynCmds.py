@@ -10,7 +10,7 @@ class NinjaDynCmds(commands.Cog):
 
     async def process_command(self, ctx) -> bool:
         return await commandProc(self, ctx)
-    
+
     @commands.command()
     @commands.has_role("Moderator")
     async def add(self, ctx: commands.context, command: str, reply: str, *args) -> None: # use kwargs instead for reply
