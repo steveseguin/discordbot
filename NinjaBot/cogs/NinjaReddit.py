@@ -26,7 +26,7 @@ class NinjaReddit(commands.Cog):
             # get subreddit and submissions
             ninjaSubreddit = await self.Reddit.subreddit("VDONinja")
             async for submission in ninjaSubreddit.new(limit=5):
-                # check if this post we are looking at now is the last one that was posted
+                # check if the post we are looking at is the last one that we know was posted
                 if submission.id == lastSubmission:
                     break
                 # since post was not yet posted, add to posting queue
@@ -48,13 +48,12 @@ class NinjaReddit(commands.Cog):
                 redditChannel = self.bot.get_channel(int(self.bot.config.get("redditChannel")))
                 for submission in toPostSubmissions:
                     await redditChannel.send(embed=self._formatSubmission(submission))
-                    #logging.debug(self._formatSubmission(submission))
                     newLastSubmission = submission.id
                     await sleep(2) # do some reate limiting ourselfs
             except Exception as E:
                 raise E
             finally:
-                # update id of last post to what was the last sucessfully sent one
+                # update id of last post to what was the sucessfully sent last
                 await self.bot.config.set("redditLastSubmission", newLastSubmission)
 
     def _formatSubmission(self, s) -> Embed:
@@ -62,13 +61,13 @@ class NinjaReddit(commands.Cog):
         e.title = s.title if s.title else "no title"
         e.title = e.title[:98] + ".." if len(e.title) > 98 else e.title[:100]
         e.url = f"https://reddit.com{s.permalink}"
-        e.color = Colour.random()
+        e.color = Colour.orange()
         if not s.is_self and "https://i.redd.it" in s.url:
             e.set_thumbnail(url=s.url)
-        e.add_field(name=s.author.name[:256], value=self._submissionTextFormater(s))
+        e.add_field(name=s.author.name[:256], value=self._formatSubmissionText(s))
         return e
 
-    def _submissionTextFormater(self, s) -> str:
+    def _formatSubmissionText(self, s) -> str:
         if s.is_self:
             charLimit = 220
             strippedNewlines = re.sub(r"\n{2,}", "\n", s.selftext) # remove newlines if more then one newline
@@ -100,7 +99,7 @@ class NinjaReddit(commands.Cog):
             text = s.url
         return text[:1024] # limit again just for safety
 
-    @redditChecker.before_loop
+    @redditChecker.before_loop # not sure if this even works
     async def before_redditChecker(self) -> None:
         logging.debug('waiting...')
         await self.bot.wait_until_ready()

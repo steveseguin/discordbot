@@ -8,6 +8,7 @@ class NinjaBotUtils(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.has_role("Moderator")
+    @commands.guild_only()
     async def update(self, ctx) -> None:
         """Update the available commands by reloading the bot extensions"""
         await self.bot.reloadExtensions(ctx)

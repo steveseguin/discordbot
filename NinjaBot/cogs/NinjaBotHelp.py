@@ -1,6 +1,7 @@
 import logging
 import embedBuilder
 from discord.ext import commands
+from discord import DMChannel
 
 class NinjaBotHelp(commands.Cog):
     def __init__(self, bot) -> None:
@@ -8,7 +9,7 @@ class NinjaBotHelp(commands.Cog):
         self.isInternal = True
 
     @commands.command()
-    async def commands(self, ctx, *args) -> None:
+    async def commands(self, ctx) -> None:
         """List all available commands"""
         allCommands = []
         for cog in self.bot.cogs:
@@ -19,7 +20,8 @@ class NinjaBotHelp(commands.Cog):
             title="Available commands:",
             description="".join(["!" + c + "\n" for c in sorted(allCommands)])
             ))
-        await ctx.message.delete()
+        if not isinstance(ctx.channel, DMChannel):
+            await ctx.message.delete()
 
     async def getCommands(self) -> list:
         """Return the available commands as a list"""

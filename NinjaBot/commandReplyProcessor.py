@@ -1,5 +1,6 @@
 import embedBuilder
 from discord import utils
+from discord import DMChannel
 
 async def commandProc(self, ctx):
     try:
@@ -17,9 +18,10 @@ async def commandProc(self, ctx):
                 await initialMessage.reply(embed=embed)
             else:
                 # every other case
-                await ctx.send(None, embed=embed)
-            await ctx.message.delete()
+                await ctx.send(embed=embed)
+            if not isinstance(ctx.channel, DMChannel):
+                await ctx.message.delete()
             return True
-    except:
-        pass
+    except Exception as E:
+        raise E
     return False
