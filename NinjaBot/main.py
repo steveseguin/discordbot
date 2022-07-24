@@ -3,7 +3,7 @@ import asyncio
 import logging
 import pathlib
 from discord.ext import commands
-from discord.ext.commands import MissingPermissions, MissingRole, CommandNotFound, MissingRequiredArgument
+from discord.ext.commands import MissingPermissions, MissingRole, CommandNotFound, MissingRequiredArgument, NoPrivateMessage
 from config import Config
 
 # get local directory as path object
@@ -72,12 +72,9 @@ class NinjaBot(commands.Bot):
             NinjaGithub = self.get_cog("NinjaGithub")
             if await NinjaGithub.process_command(ctx):
                 return
-        else:
-            pass
-
-        # otherwise look elsewhere for command
-        logging.debug("Command not found by custom handlers, try processing native commands")
-        await self.process_commands(message)
+            # otherwise look elsewhere for command
+            logging.debug("Command not found by custom handlers, try processing native commands")
+            await self.process_commands(message)
     
     # reload all extensions
     async def reloadExtensions(self, ctx):
@@ -94,6 +91,7 @@ class NinjaBot(commands.Bot):
 
     # handle some errors. this works for extension commands too so no need to redefine in there
     async def on_command_error(self, ctx, err):
+        logging.debug(err)
         if isinstance(err, MissingPermissions) or isinstance(err, MissingRole):
             # silently ignore no-permissions errors
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
@@ -101,6 +99,8 @@ class NinjaBot(commands.Bot):
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
         elif isinstance(err, MissingRequiredArgument):
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without providing all required arguments")
+        elif isinstance(err, NoPrivateMessage):
+            logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
         else:
             raise err
 
@@ -140,6 +140,7 @@ general TODO list:
 - (OK) make commands only work at start of message
 - (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
 - (OK) if command is used in reply to another user, replace that reply with bot reply
+- rework logging and add optional file logger
 - spammer detection with kick/ban (it's own cog)
 - load commands from dynamic file (hot reloadable)
 - make content from dynamic file usable
