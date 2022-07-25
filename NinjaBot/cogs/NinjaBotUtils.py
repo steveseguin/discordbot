@@ -1,6 +1,8 @@
 import logging
 from discord.ext import commands
 
+logger = logging.getLogger("NinjaBot." + __name__)
+
 class NinjaBotUtils(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -18,9 +20,9 @@ class NinjaBotUtils(commands.Cog):
         return [c.name for c in self.get_commands()]
 
 async def setup(bot) -> None:
-    logging.debug("Loading NinjaBotUtils")
+    logger.debug(f"Loading {__name__}")
     cogInstance = NinjaBotUtils(bot)
     await bot.add_cog(cogInstance)
 
 async def teardown(bot) -> None:
-    logging.debug("Shutting down NinjaBotUtils")
+    logger.debug(f"Shutting down {__name__}")

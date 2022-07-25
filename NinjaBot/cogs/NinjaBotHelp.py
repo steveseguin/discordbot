@@ -3,12 +3,14 @@ import embedBuilder
 from discord.ext import commands
 from discord import DMChannel
 
+logger = logging.getLogger("NinjaBot." + __name__)
+
 class NinjaBotHelp(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.isInternal = True
 
-    @commands.command()
+    @commands.command(aliases=["list"])
     async def commands(self, ctx) -> None:
         """List all available commands"""
         allCommands = []
@@ -28,9 +30,9 @@ class NinjaBotHelp(commands.Cog):
         return [c.name for c in self.get_commands()]
 
 async def setup(bot) -> None:
-    logging.debug("Loading NinjaBotHelp")
+    logger.debug(f"Loading {__name__}")
     cogInstance = NinjaBotHelp(bot)
     await bot.add_cog(cogInstance)
 
 async def teardown(bot) -> None:
-    logging.debug("Shutting down NinjaBotHelp")
+    logger.debug(f"Shutting down {__name__}")

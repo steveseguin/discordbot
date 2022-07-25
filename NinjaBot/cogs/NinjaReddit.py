@@ -6,6 +6,8 @@ from discord.ext import commands, tasks
 from discord import Embed, Colour
 from asyncio import sleep
 
+logger = logging.getLogger("NinjaBot." + __name__)
+
 class NinjaReddit(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -19,7 +21,7 @@ class NinjaReddit(commands.Cog):
 
     @tasks.loop(seconds=120)
     async def redditChecker(self) -> None:
-        logging.debug("Running reddit checker")
+        logger.debug("Running reddit checker")
         try:
             lastSubmission = self.bot.config.get("redditLastSubmission")
             toPostSubmissions = []
@@ -32,7 +34,7 @@ class NinjaReddit(commands.Cog):
                 # since post was not yet posted, add to posting queue
                 toPostSubmissions.append(submission)              
         except Exception as E:
-            logging.debug("Error while polling reddit submissions")
+            logger.debug("Error while polling reddit submissions")
             raise E
         else:
             # if we got result reverse order otherwise just return because there is nothing to do
@@ -42,7 +44,7 @@ class NinjaReddit(commands.Cog):
                 return
 
             # post all open submissions
-            logging.debug(toPostSubmissions)
+            logger.debug(toPostSubmissions)
             newLastSubmission = lastSubmission
             try:
                 redditChannel = self.bot.get_channel(int(self.bot.config.get("redditChannel")))
@@ -99,9 +101,8 @@ class NinjaReddit(commands.Cog):
             text = s.url
         return text[:1024] # limit again just for safety
 
-    @redditChecker.before_loop # not sure if this even works
+    @redditChecker.before_loop
     async def before_redditChecker(self) -> None:
-        logging.debug('waiting...')
         await self.bot.wait_until_ready()
     
     async def getCommands(self) -> list:
@@ -110,8 +111,8 @@ class NinjaReddit(commands.Cog):
         return []
 
 async def setup(bot) -> None:
-    logging.debug("Loading NinjaReddit")
+    logger.debug(f"Loading {__name__}")
     await bot.add_cog(NinjaReddit(bot))
 
 async def teardown(bot) -> None:
-    logging.debug("Shutting down NinjaReddit")
+    logger.debug(f"Shutting down {__name__}")

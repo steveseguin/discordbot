@@ -2,6 +2,8 @@ import logging
 from discord.ext import commands
 from commandReplyProcessor import commandProc
 
+logger = logging.getLogger("NinjaBot." + __name__)
+
 class NinjaDynCmds(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -15,9 +17,9 @@ class NinjaDynCmds(commands.Cog):
     @commands.has_role("Moderator")
     async def add(self, ctx: commands.context, command: str, reply: str, *args) -> None: # use kwargs instead for reply
         """Command to dynamically add a command to the bot. Should not be used."""
-        logging.debug(command)
-        logging.debug(reply)
-        logging.debug(args)
+        logger.debug(command)
+        logger.debug(reply)
+        logger.debug(args)
         if args:
             await ctx.send("If you want to use spaces, please put the text in quotes")
         # TODO: re-integrate add command, but still warn user to also create a PR for it and run reload after merge
@@ -29,9 +31,9 @@ class NinjaDynCmds(commands.Cog):
         return list(self.commands.keys())
 
 async def setup(bot) -> None:
-    logging.debug("Loading NinjaDynCmds")
+    logger.debug(f"Loading {__name__}")
     cogInstance = NinjaDynCmds(bot)
     await bot.add_cog(cogInstance)
 
 async def teardown(bot) -> None:
-    logging.debug("Shutting down NinjaDynCmds")
+    logger.debug(f"Shutting down {__name__}")

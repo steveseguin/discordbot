@@ -2,15 +2,47 @@ import discord
 import asyncio
 import logging
 import pathlib
+import discord.ext.commands
+import logging.handlers
 from discord.ext import commands
-from discord.ext.commands import MissingPermissions, MissingRole, CommandNotFound, MissingRequiredArgument, NoPrivateMessage
 from config import Config
 
 # get local directory as path object
 LOCALDIR = pathlib.Path(__file__).parent.resolve()
 
 # setup logger
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
+generalLogLevel = logging.DEBUG
+
+formatter = logging.Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
+
+# rotating log file handler
+rotateFileHnd = logging.handlers.RotatingFileHandler(
+    filename="ninjaBot.log",
+    encoding="utf-8",
+    maxBytes=32 * 1024 * 1024,  # 32 MiB
+    backupCount=5,  # Rotate through 5 files
+)
+rotateFileHnd.setLevel(generalLogLevel)
+rotateFileHnd.setFormatter(formatter)
+
+# cmd output
+streamHnd = logging.StreamHandler()
+streamHnd.setLevel(generalLogLevel)
+streamHnd.setFormatter(formatter)
+
+# discord logger
+dcL = logging.getLogger("discord")
+dcL.setLevel(generalLogLevel)
+logging.getLogger("discord.http").setLevel(logging.INFO)
+logging.getLogger("discord.gateway").setLevel(logging.DEBUG)
+dcL.addHandler(rotateFileHnd)
+dcL.addHandler(streamHnd)
+
+# NinjaBot logger
+nbL = logging.getLogger("NinjaBot")
+nbL.setLevel(generalLogLevel)
+nbL.addHandler(rotateFileHnd)
+nbL.addHandler(streamHnd)
 
 # configure discord gateway intents
 intents = discord.Intents.default()
@@ -29,7 +61,8 @@ class NinjaBot(commands.Bot):
             command_prefix=self.config.get("commandPrefix"),
             intents=intents,
             allowed_mentions=mentions,
-            help_command=None
+            help_command=None,
+            log_handler=None
             )
 
     # informational event when bot has finished logging in
@@ -42,7 +75,7 @@ class NinjaBot(commands.Bot):
         # internal bot commands (DONE)
         await self.load_extension("cogs.NinjaBotUtils")
         # spammer detection system
-        #
+        await self.load_extension("cogs.NinjaAntiSpam")
         # the bot help command (DONE)
         await self.load_extension("cogs.NinjaBotHelp")
         # commands from github (DONE)
@@ -92,14 +125,14 @@ class NinjaBot(commands.Bot):
     # handle some errors. this works for extension commands too so no need to redefine in there
     async def on_command_error(self, ctx, err):
         logging.debug(err)
-        if isinstance(err, MissingPermissions) or isinstance(err, MissingRole):
+        if isinstance(err, discord.ext.commands.MissingPermissions) or isinstance(err, discord.ext.commands.MissingRole):
             # silently ignore no-permissions errors
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
-        elif isinstance(err, CommandNotFound):
+        elif isinstance(err, discord.ext.commands.CommandNotFound):
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
-        elif isinstance(err, MissingRequiredArgument):
+        elif isinstance(err, discord.ext.commands.MissingRequiredArgument):
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without providing all required arguments")
-        elif isinstance(err, NoPrivateMessage):
+        elif isinstance(err, discord.ext.commands.NoPrivateMessage):
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
         else:
             raise err
@@ -140,8 +173,8 @@ general TODO list:
 - (OK) make commands only work at start of message
 - (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
 - (OK) if command is used in reply to another user, replace that reply with bot reply
-- rework logging and add optional file logger
-- spammer detection with kick/ban (it's own cog)
+- (OK) rework logging and add optional file logger
+- spammer detection with kick/ban
 - load commands from dynamic file (hot reloadable)
 - make content from dynamic file usable
 - command to add a new command to dynamic file and reload it
