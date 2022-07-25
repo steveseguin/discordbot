@@ -21,7 +21,7 @@ class NinjaGithub(commands.Cog):
         except Exception as E:
             raise E
         else:
-            logger.debug("Sucessfully loaded github data for commands:")
+            logger.debug("Sucessfully loaded github data for commands")
             #logger.debug(json.dumps(self.commands, indent=2, sort_keys=True))
 
     async def process_command(self, ctx) -> bool:

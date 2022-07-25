@@ -7,6 +7,8 @@ import logging.handlers
 from discord.ext import commands
 from config import Config
 
+discord.VoiceClient.warn_nacl = False
+
 # get local directory as path object
 LOCALDIR = pathlib.Path(__file__).parent.resolve()
 
@@ -32,14 +34,16 @@ streamHnd.setFormatter(formatter)
 
 # discord logger
 dcL = logging.getLogger("discord")
+dcL.propagate = False
 dcL.setLevel(generalLogLevel)
-logging.getLogger("discord.http").setLevel(logging.INFO)
+logging.getLogger("discord.http").setLevel(logging.DEBUG)
 logging.getLogger("discord.gateway").setLevel(logging.DEBUG)
 dcL.addHandler(rotateFileHnd)
 dcL.addHandler(streamHnd)
 
 # NinjaBot logger
 nbL = logging.getLogger("NinjaBot")
+nbL.propagate = False
 nbL.setLevel(generalLogLevel)
 nbL.addHandler(rotateFileHnd)
 nbL.addHandler(streamHnd)
