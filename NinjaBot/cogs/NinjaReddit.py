@@ -3,7 +3,7 @@ import asyncpraw
 import embedBuilder
 import re
 from discord.ext import commands, tasks
-from discord import Embed, Colour
+from discord import Colour
 from asyncio import sleep
 
 logger = logging.getLogger("NinjaBot." + __name__)
@@ -19,7 +19,7 @@ class NinjaReddit(commands.Cog):
         )
         self.redditChecker.start()
 
-    @tasks.loop(seconds=120)
+    @tasks.loop(minutes=5)
     async def redditChecker(self) -> None:
         logger.debug("Running reddit checker")
         try:
@@ -58,7 +58,7 @@ class NinjaReddit(commands.Cog):
                 # update id of last post to what was the sucessfully sent last
                 await self.bot.config.set("redditLastSubmission", newLastSubmission)
 
-    def _formatSubmission(self, s) -> Embed:
+    def _formatSubmission(self, s) -> embedBuilder.ninjaEmbed:
         e = embedBuilder.ninjaEmbed()
         e.title = s.title if s.title else "no title"
         e.title = e.title[:98] + ".." if len(e.title) > 98 else e.title[:100]
