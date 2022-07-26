@@ -14,9 +14,6 @@ class NinjaAntiSpam(commands.Cog):
         self.h = {}
         self.cleanupJob.start()
 
-        # move to config file
-        self.logChannel = "1001542545173643355"
-
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """For anti-spam purposes we don't care if it's a command or normal message"""
@@ -68,9 +65,8 @@ class NinjaAntiSpam(commands.Cog):
         return 15-val if val <= 15 else 0
 
     async def cleanupMember(self, author) -> None:
-        # kick/ban user
-        # await author.kick(reason="Spam")
-        botlogCh = self.bot.get_channel(int(self.logChannel))
+        await author.kick(reason="Spam")
+        botlogCh = self.bot.get_channel(int(self.bot.config.get("botlogChannel")))
         await botlogCh.send(f"{author} has been kicked for spam")
         await botlogCh.send(f"{author} Spam Report:")
         uid = author.id
