@@ -79,7 +79,7 @@ class NinjaBot(commands.Bot):
 
         # internal bot commands (DONE)
         await self.load_extension("cogs.NinjaBotUtils")
-        # spammer detection system
+        # spammer detection system (DONE)
         await self.load_extension("cogs.NinjaAntiSpam")
         # the bot help command (DONE)
         await self.load_extension("cogs.NinjaBotHelp")

@@ -1,7 +1,7 @@
 import logging
 import discord
 from discord.ext import commands, tasks
-from datetime import datetime
+from datetime import datetime, timedelta
 from strsimpy import SIFT4
 
 logger = logging.getLogger("NinjaBot." + __name__)
@@ -12,7 +12,8 @@ class NinjaAntiSpam(commands.Cog):
         self.isInternal = True
         self.s = SIFT4()
         self.h = {}
-        self.cleanupJob.start()
+        self.historyCleanupJob.start()
+        self.botlogCleanupJob.start()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -24,6 +25,7 @@ class NinjaAntiSpam(commands.Cog):
             # ignore messages by the bot itself, moderators and system messages
             return
         #logger.debug(message)
+        #logger.debug(message.content)
 
         if message.content:
             msg = message.content
@@ -64,24 +66,29 @@ class NinjaAntiSpam(commands.Cog):
     def inv(self, val) -> int:
         return 15-val if val <= 15 else 0
 
+    # function to kick a member and cleanup their messages
     async def cleanupMember(self, author) -> None:
         await author.kick(reason="Spam")
+
         botlogCh = self.bot.get_channel(int(self.bot.config.get("botlogChannel")))
+        logger.warn(f"{author} has been kicked for spam")
         await botlogCh.send(f"{author} has been kicked for spam")
         await botlogCh.send(f"{author} Spam Report:")
+
         uid = author.id
         for mid, chid in self.h[uid]["msgs"]:
             spamChannel = self.bot.get_channel(chid)
             msg = await spamChannel.fetch_message(mid)
+            logger.warn(f"{msg.channel.name}: {msg.content}")
             await botlogCh.send(f"{msg.channel.name}: {msg.content}")
             await msg.delete()
 
         # delete user from message buffer
         del self.h[uid]
 
-    # use task for cleanup old user objects
+    # use task to cleanup old user objects
     @tasks.loop(seconds=120)
-    async def cleanupJob(self) -> None:
+    async def historyCleanupJob(self) -> None:
         logger.debug("Running antispam cleanup job")
         logger.debug(f"self.h before cleanup: {self.h}")
         now = datetime.now().timestamp()
@@ -90,8 +97,21 @@ class NinjaAntiSpam(commands.Cog):
                 del self.h[uid]
         logger.debug(f"self.h after cleanup: {self.h}")
 
-    @cleanupJob.before_loop
-    async def before_cleanupJob(self) -> None:
+    @historyCleanupJob.before_loop
+    async def before_historyCleanupJob(self) -> None:
+        await self.bot.wait_until_ready()
+
+    # cleanup old message in botlog channel
+    @tasks.loop(hours=12)
+    async def botlogCleanupJob(self) -> None:
+        logger.debug("Running botlog channel cleanup job")
+        botlogChannel = self.bot.get_channel(int(self.bot.config.get("botlogChannel")))
+        async for message in botlogChannel.history(limit=300, before=datetime.today()-timedelta(days=30)):
+            if message.author == self.bot.user and "has been kicked" not in message.content:
+                await message.delete()
+
+    @botlogCleanupJob.before_loop
+    async def before_botlogCleanupJob(self) -> None:
         await self.bot.wait_until_ready()
 
     async def getCommands(self) -> list:
