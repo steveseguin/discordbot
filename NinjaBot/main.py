@@ -138,6 +138,7 @@ class NinjaBot(commands.Bot):
         elif isinstance(err, discord.ext.commands.NoPrivateMessage):
             logging.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
         else:
+            logging.error(err)
             raise err
 
 async def main() -> None:
@@ -177,7 +178,7 @@ general TODO list:
 - (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
 - (OK) if command is used in reply to another user, replace that reply with bot reply
 - (OK) rework logging and add optional file logger
-- spammer detection with kick/ban
+- (OK) spammer detection with kick/ban
 - load commands from dynamic file (hot reloadable)
 - make content from dynamic file usable
 - command to add a new command to dynamic file and reload it
@@ -186,4 +187,5 @@ general TODO list:
 - (OK) add bot activity ("just helping out"?)
 - (Bonus) add register and unregister method to main bot class (save first part of command and callback?)
 - (Bonus) use teardown listener to run unregister and update to update (check if valid)
+- (Bonus) improve spam detection by factoring in message posting speed
 """

@@ -1,5 +1,6 @@
 import logging
 import discord
+import embedBuilder
 from discord.ext import commands, tasks
 from datetime import datetime, timedelta
 from strsimpy import SIFT4
@@ -19,13 +20,13 @@ class NinjaAntiSpam(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         """For anti-spam purposes we don't care if it's a command or normal message"""
         if message.author == self.bot.user \
+            or isinstance(message.channel, discord.DMChannel) \
             or discord.utils.get(message.author.roles, name="Moderator") \
             or not (message.type == discord.MessageType.default \
             or message.type == discord.MessageType.reply):
             # ignore messages by the bot itself, moderators and system messages
             return
         #logger.debug(message)
-        #logger.debug(message.content)
 
         if message.content:
             msg = message.content
@@ -51,15 +52,15 @@ class NinjaAntiSpam(commands.Cog):
             self.h[uid]["msgs"].append([message.id, message.channel.id])
 
             # calculate message distance using sift4
-            rawDist = self.s.distance(self.h[uid]["lm"], msg)
-            dist = self.inv(rawDist)
-            logger.debug(f"sift4 distance: raw: {rawDist} | inv: {dist}")
-            if dist >= 10:
+            dist = self.s.distance(self.h[uid]["lm"], msg)
+            logger.debug(f"sift4 distance: {dist}")
+            if dist <= 4:
                 # messages are too close
                 self.h[uid]["abuse"] += 1
+                logger.debug(f"user {self.h[uid]} increated abuse count")
             if self.h[uid]["abuse"] >= 2: # it is spam
                 await self.cleanupMember(message.author)
-            else: # it is not spam (yet)
+            else: # it is not spam (at least yet)
                 self.h[uid]["lmts"] = now
                 self.h[uid]["lm"] = msg
 
@@ -68,23 +69,35 @@ class NinjaAntiSpam(commands.Cog):
 
     # function to kick a member and cleanup their messages
     async def cleanupMember(self, author) -> None:
-        await author.kick(reason="Spam")
+        try:
+            await author.kick(reason="Spam")
+        except Exception as E:
+            logger.warn(f"Could not kick user {str(author)}")
 
         botlogCh = self.bot.get_channel(int(self.bot.config.get("botlogChannel")))
         logger.warn(f"{author} has been kicked for spam")
-        await botlogCh.send(f"{author} has been kicked for spam")
-        await botlogCh.send(f"{author} Spam Report:")
+        await botlogCh.send(f"{author} has been kicked for spam. Spam Report:")
 
         uid = author.id
+        blMsg = ""
         for mid, chid in self.h[uid]["msgs"]:
             spamChannel = self.bot.get_channel(chid)
             msg = await spamChannel.fetch_message(mid)
-            logger.warn(f"{msg.channel.name}: {msg.content}")
-            await botlogCh.send(f"{msg.channel.name}: {msg.content}")
+            line = f"{msg.channel.name}: {msg.content}"
+            logger.warn(line)
             await msg.delete()
+            if len(blMsg) + len(line) > 4090:
+                await self.sendReport(botlogCh, blMsg)
+                blMsg = line
+            else:
+                blMsg += line + "\n"
+        await self.sendReport(botlogCh, blMsg)
 
         # delete user from message buffer
         del self.h[uid]
+    
+    async def sendReport(self, ch, msg) -> None:
+        await ch.send(embed=embedBuilder.ninjaEmbed(description=msg[:4096].rstrip()))
 
     # use task to cleanup old user objects
     @tasks.loop(seconds=120)
