@@ -15,7 +15,7 @@ class NinjaReddit(commands.Cog):
         self.Reddit = asyncpraw.Reddit(
             client_id=self.bot.config.get("redditClientId"),
             client_secret=self.bot.config.get("redditClientSecret"),
-            user_agent=f"linux:ninja.vdo.discordbot{'.dev' if self.bot.config.get('isDev') else ''}:v0.2 (by /u/lebaston100)"
+            user_agent=f"linux:ninja.vdo.discordbot{'.dev' if self.bot.config.get('isDev') else ''}:v0.3 (by /u/lebaston100)"
         )
         self.redditChecker.start()
 

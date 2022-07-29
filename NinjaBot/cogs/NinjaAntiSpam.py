@@ -20,11 +20,12 @@ class NinjaAntiSpam(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         """For anti-spam purposes we don't care if it's a command or normal message"""
         if message.author == self.bot.user \
+            or message.author.bot \
             or isinstance(message.channel, discord.DMChannel) \
             or discord.utils.get(message.author.roles, name="Moderator") \
             or not (message.type == discord.MessageType.default \
             or message.type == discord.MessageType.reply):
-            # ignore messages by the bot itself, moderators and system messages
+            # ignore messages by bots, moderators and system messages
             return
         #logger.debug(message)
 
@@ -58,14 +59,11 @@ class NinjaAntiSpam(commands.Cog):
                 # messages are too close
                 self.h[uid]["abuse"] += 1
                 logger.debug(f"user {self.h[uid]} increated abuse count")
-            if self.h[uid]["abuse"] >= 2: # it is spam
+            if self.h[uid]["abuse"] >= 3: # it is spam
                 await self.cleanupMember(message.author)
             else: # it is not spam (at least yet)
                 self.h[uid]["lmts"] = now
                 self.h[uid]["lm"] = msg
-
-    def inv(self, val) -> int:
-        return 15-val if val <= 15 else 0
 
     # function to kick a member and cleanup their messages
     async def cleanupMember(self, author) -> None:
@@ -100,7 +98,7 @@ class NinjaAntiSpam(commands.Cog):
         await ch.send(embed=embedBuilder.ninjaEmbed(description=msg[:4096].rstrip()))
 
     # use task to cleanup old user objects
-    @tasks.loop(seconds=120)
+    @tasks.loop(minutes=2)
     async def historyCleanupJob(self) -> None:
         logger.debug("Running antispam cleanup job")
         logger.debug(f"self.h before cleanup: {self.h}")

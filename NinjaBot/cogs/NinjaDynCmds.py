@@ -20,8 +20,7 @@ class NinjaDynCmds(commands.Cog):
         logger.debug(command)
         logger.debug(reply)
         logger.debug(args)
-        if args:
-            await ctx.send("If you want to use spaces, please put the text in quotes")
+        args and await ctx.send("If you want to use spaces, please put the text in quotes")
         # TODO: re-integrate add command, but still warn user to also create a PR for it and run reload after merge
         # for now just send a text message
         await ctx.send("For now please create a PR against the bot repo to add a command and run !update after merge")
