@@ -153,7 +153,7 @@ async def main() -> None:
         nbL.fatal(E)
         return
     
-    nbL.debug(f"Token {config.get('discordBotToken')} loaded. Loading bot and extensions.")
+    nbL.debug(f"Token loaded. Loading bot and extensions.")
 
     nBot = NinjaBot(config)
 

@@ -135,4 +135,4 @@ class NinjaAntiSpam(commands.Cog):
         logger.debug(f"Shutting down {self.__class__.__name__}")
 
 async def setup(bot) -> None:
-    await bot.add_cog(cogInstance = NinjaAntiSpam(bot))
+    await bot.add_cog(NinjaAntiSpam(bot))

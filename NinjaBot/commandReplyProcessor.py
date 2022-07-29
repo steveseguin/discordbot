@@ -1,8 +1,9 @@
 import embedBuilder
 from discord import utils
 from discord import DMChannel
+from discord.ext.commands import Context
 
-async def commandProc(self, ctx):
+async def commandProc(self, ctx: Context):
     try:
         command = ctx.message.content[1:].split()[0].lower()
         if command in self.commands.keys():
