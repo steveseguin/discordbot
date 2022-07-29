@@ -33,7 +33,7 @@ streamHnd.setFormatter(formatter)
 # discord logger
 dcL = logging.getLogger("discord")
 dcL.propagate = False
-dcL.setLevel(generalLogLevel)
+dcL.setLevel(logging.INFO)
 logging.getLogger("discord.http").setLevel(logging.INFO)
 logging.getLogger("discord.gateway").setLevel(logging.INFO)
 dcL.addHandler(rotateFileHnd)
@@ -105,8 +105,12 @@ class NinjaBot(commands.Bot):
             return
         elif ctx.message.content.startswith(self.config.get("commandPrefix")):
             # might be a command. pass it around to see if anyone wants to deal with it
+            # in order: github -> dynamic command -> native command
             NinjaGithub = self.get_cog("NinjaGithub")
             if await NinjaGithub.process_command(ctx):
+                return
+            NinjaDynCmds = self.get_cog("NinjaDynCmds")
+            if await NinjaDynCmds.process_command(ctx):
                 return
             # otherwise look elsewhere for command
             nbL.debug("Command not found by custom handlers, try processing native commands")

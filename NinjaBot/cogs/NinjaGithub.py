@@ -7,6 +7,7 @@ logger = logging.getLogger("NinjaBot." + __name__)
 
 class NinjaGithub(commands.Cog):
     def __init__(self, bot) -> None:
+        logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
         self.isInternal = False
         self.githubUrl = self.bot.config.get("githubUrl")
@@ -21,7 +22,7 @@ class NinjaGithub(commands.Cog):
         except Exception as E:
             raise E
         else:
-            logger.debug("Sucessfully loaded github data for commands")
+            logger.debug("Sucessfully loaded commands from github")
             #logger.debug(json.dumps(self.commands, indent=2, sort_keys=True))
 
     async def process_command(self, ctx) -> bool:
@@ -36,10 +37,8 @@ class NinjaGithub(commands.Cog):
         """Return the available commands as a list"""
         return list(self.commands.keys())
 
-async def setup(bot) -> None:
-    logger.debug(f"Loading {__name__}")
-    cogInstance = NinjaGithub(bot)
-    await bot.add_cog(cogInstance)
+    async def cog_unload(self) -> None:
+        logger.debug(f"Shutting down {self.__class__.__name__}")
 
-async def teardown(bot) -> None:
-    logger.debug(f"Shutting down {__name__}")
+async def setup(bot) -> None:
+    await bot.add_cog(NinjaGithub(bot))

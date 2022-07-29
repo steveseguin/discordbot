@@ -5,6 +5,7 @@ logger = logging.getLogger("NinjaBot." + __name__)
 
 class NinjaBotUtils(commands.Cog):
     def __init__(self, bot) -> None:
+        logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
         self.isInternal = True
 
@@ -19,10 +20,8 @@ class NinjaBotUtils(commands.Cog):
         """Return the available commands as a list"""
         return [c.name for c in self.get_commands()]
 
-async def setup(bot) -> None:
-    logger.debug(f"Loading {__name__}")
-    cogInstance = NinjaBotUtils(bot)
-    await bot.add_cog(cogInstance)
+    async def cog_unload(self) -> None:
+        logger.debug(f"Shutting down {self.__class__.__name__}")
 
-async def teardown(bot) -> None:
-    logger.debug(f"Shutting down {__name__}")
+async def setup(bot) -> None:
+    await bot.add_cog(NinjaBotUtils(bot))
