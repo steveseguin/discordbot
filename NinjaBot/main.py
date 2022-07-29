@@ -183,9 +183,9 @@ general TODO list:
 - (OK) if command is used in reply to another user, replace that reply with bot reply
 - (OK) rework logging and add optional file logger
 - (OK) spammer detection with kick/ban
-- load commands from dynamic file (hot reloadable)
-- make content from dynamic file usable
-- command to add a new command to dynamic file and reload it
+- (OK) load commands from dynamic file (hot reloadable)
+- (OK) make content from dynamic file usable
+- (OK) command to add a new command to dynamic file and reload it
 - (OK) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - (Bonus) get docs search working again and line it up with other cogs
 - (OK) add bot activity ("just helping out"?)

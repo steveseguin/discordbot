@@ -22,7 +22,7 @@ class NinjaDynCmds(commands.Cog):
     @commands.command()
     @commands.has_role("Moderator")
     async def add(self, ctx: commands.context, command: str, reply: str, *args) -> None:
-        """Command to dynamically add a command to the bot. Should not be used."""
+        """Command to dynamically add a command to the bot. Should not be used (but works)."""
         args and await ctx.send("If you want to use spaces, please put the text in quotes")
         await ctx.send("This is only for temp use. Please consider creating a PR to the bot repo.")
 
@@ -52,7 +52,6 @@ class NinjaDynCmds(commands.Cog):
     async def _loadFromFile(self) -> None:
         logger.debug("Loading dyn cmds from file")
         self.commands = await self._fh.read()
-        logger.debug(self.commands)
 
     async def _saveToFile(self) -> None:
         logger.debug("Saving dyn cmds to file")
@@ -72,7 +71,3 @@ class NinjaDynCmds(commands.Cog):
 
 async def setup(bot) -> None:
     await bot.add_cog(NinjaDynCmds(bot))
-
-# TODO
-# add command to dict and save
-# add remove to remove from dict and save to file (+ reload from file)
