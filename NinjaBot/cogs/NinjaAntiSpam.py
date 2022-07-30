@@ -59,7 +59,7 @@ class NinjaAntiSpam(commands.Cog):
             if dist <= 4:
                 # messages are too close
                 self.h[uid]["abuse"] += 1
-                logger.debug(f"user {self.h[uid]} increated abuse count")
+                logger.debug(f"user {self.h[uid]} increased abuse count")
             if self.h[uid]["abuse"] >= 3: # it is spam
                 await self.cleanupMember(message.author)
             else: # it is not spam (at least yet)

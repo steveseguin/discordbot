@@ -57,7 +57,7 @@ intents.typing = False
 # configure allowed mentions so bot can't ping @everyone
 mentions = discord.AllowedMentions(everyone=False)
 
-# create object instances
+# create config handler
 config = Config(file=LOCALDIR / "discordbot.cfg")
 
 class NinjaBot(commands.Bot):
@@ -132,7 +132,8 @@ class NinjaBot(commands.Bot):
     # handle some errors. this works for extension commands too so no need to redefine in there
     async def on_command_error(self, ctx, err) -> None:
         nbL.debug(err)
-        if isinstance(err, discord.ext.commands.MissingPermissions) or isinstance(err, discord.ext.commands.MissingRole):
+        if isinstance(err, discord.ext.commands.MissingPermissions) \
+            or isinstance(err, discord.ext.commands.MissingRole):
             # silently ignore no-permissions errors
             nbL.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
         elif isinstance(err, discord.ext.commands.CommandNotFound):
@@ -150,7 +151,7 @@ async def main() -> None:
         await config.parse()
     except Exception as E:
         nbL.error("Error while parsing the configuration file")
-        nbL.fatal(E)
+        nbL.exception(E)
         return
     
     nbL.debug(f"Token loaded. Loading bot and extensions.")
@@ -187,9 +188,9 @@ general TODO list:
 - (OK) make content from dynamic file usable
 - (OK) command to add a new command to dynamic file and reload it
 - (OK) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
-- (Bonus) get docs search working again and line it up with other cogs
 - (OK) add bot activity ("just helping out"?)
+- (Bonus) get docs search working again and line it up with other cogs
 - (Bonus) add register and unregister method to main bot class (save first part of command and callback?)
 - (Bonus) use cog_unload to run unregister and update to update (check if valid)
-- (Bonus) improve spam detection by factoring in message posting speed
+- (Bonus) improve spam detection by factoring in message posting speed?
 """

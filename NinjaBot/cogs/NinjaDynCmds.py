@@ -10,8 +10,7 @@ class NinjaDynCmds(commands.Cog):
     def __init__(self, bot) -> None:
         logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
-        self.isInternal = True
-        logger.debug(pathlib.Path(__file__).parent.resolve())
+        self.isInternal = False
         self._fh = fileHelper(pathlib.Path(__file__).parent.resolve() / "../suggestions.json")
         self.commands = {}
         self.loadCommands.start()
@@ -19,7 +18,7 @@ class NinjaDynCmds(commands.Cog):
     async def process_command(self, ctx) -> bool:
         return await commandProc(self, ctx)
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_role("Moderator")
     async def add(self, ctx: commands.context, command: str, reply: str, *args) -> None:
         """Command to dynamically add a command to the bot. Should not be used (but works)."""
@@ -27,14 +26,14 @@ class NinjaDynCmds(commands.Cog):
         await ctx.send("This is only for temp use. Please consider creating a PR to the bot repo.")
 
         if command in self.commands:
-            await ctx.send("Command already exists as a temp command. please !delete <command> the command!")
+            await ctx.send("Command already exists as a temp command. please use !delete <command> first")
         else:
             self.commands[command] = reply
             await self._saveToFile()
             await self._loadFromFile()
             await ctx.send(f"Command '{command}' with reply '{reply}' has been added")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.has_role("Moderator")
     async def delete(self, ctx: commands.context, command: str) -> None:
         if command in self.commands:
@@ -54,7 +53,7 @@ class NinjaDynCmds(commands.Cog):
         logger.debug("Saving dyn cmds to file")
         await self._fh.write(self.commands)
 
-    # run task only once
+    # run only once
     @tasks.loop(count=1)
     async def loadCommands(self) -> None:
         await self._loadFromFile()
