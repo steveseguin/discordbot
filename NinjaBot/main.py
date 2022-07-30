@@ -190,6 +190,6 @@ general TODO list:
 - (Bonus) get docs search working again and line it up with other cogs
 - (OK) add bot activity ("just helping out"?)
 - (Bonus) add register and unregister method to main bot class (save first part of command and callback?)
-- (Bonus) use teardown listener to run unregister and update to update (check if valid)
+- (Bonus) use cog_unload to run unregister and update to update (check if valid)
 - (Bonus) improve spam detection by factoring in message posting speed
 """
