@@ -86,7 +86,7 @@ class NinjaBot(commands.Bot):
         await self.load_extension("cogs.NinjaBotHelp")
         # commands from github (DONE)
         await self.load_extension("cogs.NinjaGithub")
-        # commands added through the bot (TODO)
+        # commands added through the bot (DONE)
         await self.load_extension("cogs.NinjaDynCmds")
         # reddit events (DONE)
         await self.load_extension("cogs.NinjaReddit")

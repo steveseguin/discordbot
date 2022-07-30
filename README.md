@@ -9,7 +9,7 @@ sudo apt-get upgrade
 sudo apt-get install python3
 sudo apt-get install python3-pip
 sudo pip3 install -r requirements.txt
-sudo python3 server.py
+sudo python3 main.py
 ```
 
 ### Setup
