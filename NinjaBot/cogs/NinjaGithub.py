@@ -39,6 +39,7 @@ class NinjaGithub(commands.Cog):
 
     async def cog_unload(self) -> None:
         logger.debug(f"Shutting down {self.__class__.__name__}")
+        self.regularUpdater.cancel()
 
 async def setup(bot) -> None:
     await bot.add_cog(NinjaGithub(bot))

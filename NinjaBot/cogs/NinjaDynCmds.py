@@ -10,7 +10,7 @@ class NinjaDynCmds(commands.Cog):
     def __init__(self, bot) -> None:
         logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
-        self.isInternal = False
+        self.isInternal = True
         logger.debug(pathlib.Path(__file__).parent.resolve())
         self._fh = fileHelper(pathlib.Path(__file__).parent.resolve() / "../suggestions.json")
         self.commands = {}
@@ -25,9 +25,6 @@ class NinjaDynCmds(commands.Cog):
         """Command to dynamically add a command to the bot. Should not be used (but works)."""
         args and await ctx.send("If you want to use spaces, please put the text in quotes")
         await ctx.send("This is only for temp use. Please consider creating a PR to the bot repo.")
-
-        logger.debug(command)
-        logger.debug(reply)
 
         if command in self.commands:
             await ctx.send("Command already exists as a temp command. please !delete <command> the command!")
@@ -68,6 +65,7 @@ class NinjaDynCmds(commands.Cog):
 
     async def cog_unload(self) -> None:
         logger.debug(f"Shutting down {self.__class__.__name__}")
+        self.loadCommands.cancel()
 
 async def setup(bot) -> None:
     await bot.add_cog(NinjaDynCmds(bot))

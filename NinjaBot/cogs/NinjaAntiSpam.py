@@ -133,6 +133,8 @@ class NinjaAntiSpam(commands.Cog):
 
     async def cog_unload(self) -> None:
         logger.debug(f"Shutting down {self.__class__.__name__}")
+        self.historyCleanupJob.cancel()
+        self.botlogCleanupJob.cancel()
 
 async def setup(bot) -> None:
     await bot.add_cog(NinjaAntiSpam(bot))
