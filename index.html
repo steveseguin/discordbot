@@ -1,0 +1,18 @@
+<html>
+<body>
+<div id="main"></div>
+<script>
+var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c9bfa782503942744b/raw/faa2653d7866c1454fcead6fcaffff014b7aa88f/updates.json").then((response) => response.json())
+	.then((data) => {
+		data.forEach(i=>{
+			var ele = document.createElement("div");
+			console.log(i);
+			var message = i[Object.keys(i)[0]];
+			console.log(message);
+			ele.innerText = message.name +  " " + message.content;
+			document.getElementById("main").appendChild(ele);
+		});
+	});
+</script>
+</body>
+</html>
