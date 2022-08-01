@@ -6,10 +6,11 @@ import json
 import os
 import csv
 import datetime
+import aiohttp
 
 bot = commands.Bot(command_prefix='!')
 
-global url, custom_commands
+global url, custom_commands, config
 url = "https://raw.githubusercontent.com/steveseguin/discordbot/main/commands.json"
 
 r = requests.get(url)
@@ -21,14 +22,41 @@ async def on_ready():
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
+    bot.session = aiohttp.ClientSession()
     print('------')
 
 @bot.event
 async def on_message(message):
-    global custom_commands
+    global custom_commands, config
     found = False
     
     timestamp = datetime.datetime.now().timestamp()
+    if (message.channel.id == 701232125831151697 and message.author.id==227248835251011585): ## This is a message to the update channel by steve (or selected channels/users)
+        filename = "updates.json"
+        try:
+            with open(filename) as json_file: ## I probably don't need to load this every time, but meh. 
+                data = json.load(json_file)
+        except:
+            data = {}
+        if str(message.id) in data: ## convert to string since JSON doesn't support ints as keys
+            data[str(message.id)]["content"] = message.content
+        else:
+            data[str(message.id)] = {}
+            data[str(message.id)]["content"] = message.content
+            data[str(message.id)]["timestamp"] = timestamp
+            data[str(message.id)]["name"] = message.author.nick
+            data[str(message.id)]["channel"] = message.channel.name
+        with open(filename, 'w') as outfile:
+            json.dump(data, outfile)
+
+        if "token" in config and "gist_id" in config: ## pushing to github is option
+            token = config["gitkey"]
+            headers = {'Authorization': f'token {token}'}
+            content = [{i:data[i]} for i in sorted(data.keys())[-40::]] ## publish a list of top 40 recent posts. This just happens to be an easy format
+            content = json.dumps(content, indent=4) # prettify the output a bit
+            r = requests.patch('https://api.github.com/gists/' + config["gist_id"], data=json.dumps({'files':{filename:{"content":content}}}),headers=headers) 
+
+
     msg = message.content[:75] if len(message.content) > 75 else message.content
     if (not message.author.id in history) or (history[message.author.id]["timestamp"] + 30 < timestamp) or (history[message.author.id]["last_message"] != msg):
         history[message.author.id] = {}
@@ -40,14 +68,18 @@ async def on_message(message):
         history[message.author.id]["abuses"]+=1
         history[message.author.id]["timestamp"] = timestamp
         if history[message.author.id]["abuses"]>=2:
-            await message.delete()
+
+            #await timeout_user(message.author.id, message.guild.id, 1)
+            #await message.author.timeout(datetime.timedelta(minutes=1))
+
             listcopy = history[message.author.id]["messages"][:]
             history[message.author.id]["messages"] = []
             for msg in listcopy:
                 await msg.delete()
             with open('spammers.csv','a') as f:
                 writer = csv.writer(f)
-                writer.writerow(message)
+                writer.writerow([message.author.name, message.author.id, message.author.nick, message.content])
+            await message.delete()
         else:
             history[message.author.id]["messages"].append(message)
 
@@ -100,10 +132,11 @@ try:
 
     cfg_location = os.path.join(sys.path[0], 'discordbot.cfg')
     with open(cfg_location) as json_file:
-        cfg = json.load(json_file)
-        token = str(cfg["token"])
-        print("Token loaded. Starting the Discord bot server..")
-        bot.run(token)
+        config = json.load(json_file)
+    token = str(config["token"])
+    print("Token loaded. Starting the Discord bot server..")
+    bot.run(token)
+
 except Exception as E:
     print("Failed to start Discord bot server.")
     print(E)
