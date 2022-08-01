@@ -1,3 +1,5 @@
 spammers.csv
 discordbot.cfg
 package-lock.json
+__pycache__
+*.pyc
