@@ -23,9 +23,14 @@ div:nth-child(even) {
 }
 .name {
 	display:inline-block;
+	font-weight: bold;
 }
 .time {
-	display:inline-block;
+	display: inline-block;
+    font-style: italic;
+    font-size: 11px;
+    position: relative;
+    top: -1px;
 }
 div:empty {
 	display:none;
@@ -37,6 +42,36 @@ div:empty {
 <h1>#Updates from Discord.VDO.Ninja
 </div>
 <script>
+
+function timeSince(date) {
+
+  var seconds = Math.floor((new Date() - date) / 1000);
+
+  var interval = seconds / 31536000;
+
+  if (interval > 1) {
+    return Math.floor(interval) + " years";
+  }
+  interval = seconds / 2592000;
+  if (interval > 1) {
+    return Math.floor(interval) + " months";
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    return Math.floor(interval) + " days";
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    return Math.floor(interval) + " hours";
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    return Math.floor(interval) + " minutes";
+  }
+  return Math.floor(seconds) + " seconds";
+}
+
+
 var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c9bfa782503942744b/raw/faa2653d7866c1454fcead6fcaffff014b7aa88f/updates.json").then((response) => response.json())
 	.then((data) => {
 		data.reverse();
@@ -49,19 +84,10 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			
 			var formattedTime = "";
 			if (message.timestamp){
-				var date = new Date(message.timestamp * 1000);
-				// Hours part from the timestamp
-				var hours = date.getHours();
-				// Minutes part from the timestamp
-				var minutes = "0" + date.getMinutes();
-				// Seconds part from the timestamp
-				var seconds = "0" + date.getSeconds();
-				// Will display time in 10:30:23 format
-				formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-				
+				formattedTime = timeSince(parseInt(message.timestamp)*1000);
 				var time = document.createElement("div");
 				time.className = "time";
-				time.innerText = formattedTime;
+				time.innerText = formattedTime +  " ago";
 				ele.appendChild(time);
 			}
 			var name = document.createElement("div");
