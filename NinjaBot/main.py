@@ -81,7 +81,7 @@ class NinjaBot(commands.Bot):
 
         # internal bot commands (DONE)
         await self.load_extension("cogs.NinjaBotUtils")
-        # spammer detection system (DONE)
+        # spammer detection system (HAS BUGS)
         await self.load_extension("cogs.NinjaAntiSpam")
         # the bot help command (DONE)
         await self.load_extension("cogs.NinjaBotHelp")
@@ -91,6 +91,8 @@ class NinjaBot(commands.Bot):
         await self.load_extension("cogs.NinjaDynCmds")
         # reddit events (DONE)
         await self.load_extension("cogs.NinjaReddit")
+        # updates.vdon.ninja page (TODO)
+        await self.load_extension("cogs.NinjaUpdates")
         # docs search tool (currently broken, TODO)
         #await self.load_extension("cogs.NinjaDocs")
 

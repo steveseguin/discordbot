@@ -16,6 +16,9 @@ class Config:
     def get(self, key):
         """return a config option by the given key"""
         return self._configOptions[key]
+    
+    def has(self, key):
+        return bool(key in self._configOptions)
 
     async def set(self, key, newVal) -> None:
         """set a config option to a new value + trigger flush"""
