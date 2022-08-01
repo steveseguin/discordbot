@@ -1,16 +1,80 @@
 <html>
+<head>
+
+<style>
+div {
+	padding:10px;
+}
+body {
+	font-family: verdana, tahoma, arial;
+	margin:10px;
+	background: #0021;
+}
+
+div:nth-child(even) {
+  background: #0001;
+}
+
+.entry {
+	display:block;
+}
+.content {
+	display:inline-block;
+}
+.name {
+	display:inline-block;
+}
+.time {
+	display:inline-block;
+}
+div:empty {
+	display:none;
+}
+</style>
+</head>
 <body>
-<div id="main"></div>
+<div id="main">
+<h1>#Updates from Discord.VDO.Ninja
+</div>
 <script>
 var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c9bfa782503942744b/raw/faa2653d7866c1454fcead6fcaffff014b7aa88f/updates.json").then((response) => response.json())
 	.then((data) => {
+		data.reverse();
 		data.forEach(i=>{
 			var ele = document.createElement("div");
+			ele.className = "entry";
 			console.log(i);
 			var message = i[Object.keys(i)[0]];
 			console.log(message);
-			ele.innerText = message.name +  " " + message.content;
+			
+			var formattedTime = "";
+			if (message.timestamp){
+				var date = new Date(message.timestamp * 1000);
+				// Hours part from the timestamp
+				var hours = date.getHours();
+				// Minutes part from the timestamp
+				var minutes = "0" + date.getMinutes();
+				// Seconds part from the timestamp
+				var seconds = "0" + date.getSeconds();
+				// Will display time in 10:30:23 format
+				formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+				
+				var time = document.createElement("div");
+				time.className = "time";
+				time.innerText = formattedTime;
+				ele.appendChild(time);
+			}
+			var name = document.createElement("div");
+			name.innerText =  message.name;
+			name.className = "name";
+			var content = document.createElement("div");
+			content.innerText =  message.content;
+			content.className = "content";
+			
+			ele.appendChild(name);
+			ele.appendChild(content);
 			document.getElementById("main").appendChild(ele);
+			
 		});
 	});
 </script>
