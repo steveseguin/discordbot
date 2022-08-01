@@ -44,7 +44,7 @@ async def on_message(message):
             data[str(message.id)] = {}
             data[str(message.id)]["content"] = message.content
             data[str(message.id)]["timestamp"] = timestamp
-            data[str(message.id)]["name"] = message.author.nick
+            data[str(message.id)]["name"] = message.author.nick or message.author.name
             data[str(message.id)]["channel"] = message.channel.name
         with open(filename, 'w') as outfile:
             json.dump(data, outfile)
