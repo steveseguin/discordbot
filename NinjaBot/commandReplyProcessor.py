@@ -12,7 +12,7 @@ async def commandProc(self, ctx: Context):
                 # if there is a mention, reply to users last message instead of pinging
                 # 2nd part of the if statement is for then a user is trying to mention themselfs
                 # 3rd part stops the bot from replying to itself
-                lastMessage = await utils.get(ctx.channel.history(limit=10), author=ctx.message.mentions[0])
+                lastMessage = await utils.get(ctx.channel.history(limit=15), author=ctx.message.mentions[0])
                 lastMessage and await lastMessage.reply(embed=embed)
             elif ctx.message.reference:
                 # like above, but reply was used instead of mention

@@ -1,6 +1,7 @@
 import logging
 import discord
 import embedBuilder
+from asyncio import sleep
 from discord.ext import commands, tasks
 from datetime import datetime, timedelta
 from strsimpy import SIFT4
@@ -23,7 +24,7 @@ class NinjaAntiSpam(commands.Cog):
         if message.author == self.bot.user \
             or message.author.bot \
             or isinstance(message.channel, discord.DMChannel) \
-            or discord.utils.get(message.author.roles, name="Moderator") \
+            or (message.author.roles and discord.utils.get(message.author.roles, name="Moderator")) \
             or not (message.type == discord.MessageType.default \
             or message.type == discord.MessageType.reply):
             # ignore messages by bots, moderators and system messages
@@ -77,23 +78,39 @@ class NinjaAntiSpam(commands.Cog):
         logger.warn(f"{author} has been kicked for spam")
         await botlogCh.send(f"{author} has been kicked for spam. Spam Report:")
 
-        uid = author.id
-        blMsg = ""
-        for mid, chid in self.h[uid]["msgs"]:
-            spamChannel = self.bot.get_channel(chid)
-            msg = await spamChannel.fetch_message(mid)
-            line = f"{msg.channel.name}: {msg.content}"
-            logger.warn(line)
-            await msg.delete()
-            if len(blMsg) + len(line) > 4090:
-                await self.sendReport(botlogCh, blMsg)
-                blMsg = line
-            else:
-                blMsg += line + "\n"
-        await self.sendReport(botlogCh, blMsg)
+        allGone = False
+        while not allGone:
+            try:
+                userData = self.h[author.id].copy()
+                # delete user from message buffer
+                logging.debug(userData)
+                if userData:
+                    del self.h[author.id]
+                    await self.deleteOldMessages(userData["msgs"], botlogCh)
+                    await sleep(1)
+                else:
+                    allGone = True
+            except:
+                pass
+        logging.debug("done doing spam cleanup stuff")
 
-        # delete user from message buffer
-        del self.h[uid]
+    async def deleteOldMessages(self, msgs, botlogCh):
+        blMsg = ""
+        for mid, chid in msgs:
+            try:
+                spamChannel = self.bot.get_channel(chid)
+                msg = await spamChannel.fetch_message(mid)
+                line = f"{msg.channel.name}: {msg.content}"
+                logger.warn(line)
+                await msg.delete()
+                if len(blMsg) + len(line) > 4090:
+                    await self.sendReport(botlogCh, blMsg)
+                    blMsg = line
+                else:
+                    blMsg += line + "\n"
+            except Exception as E:
+                logger.exception(E)
+        await self.sendReport(botlogCh, blMsg)
     
     async def sendReport(self, ch, msg) -> None:
         await ch.send(embed=embedBuilder.ninjaEmbed(description=msg[:4096].rstrip()))

@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from re import S
 from discord.ext import commands, tasks
 from commandReplyProcessor import commandProc
 from jsonFile import fileHelper
@@ -18,28 +19,38 @@ class NinjaDynCmds(commands.Cog):
     async def process_command(self, ctx) -> bool:
         return await commandProc(self, ctx)
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, aliases=["addcom"])
     @commands.has_role("Moderator")
     async def add(self, ctx: commands.context, command: str, reply: str, *args) -> None:
         """Command to dynamically add a command to the bot. Should not be used (but works)."""
         args and await ctx.send("If you want to use spaces, please put the text in quotes")
-        await ctx.send("This is only for temp use. Please consider creating a PR to the bot repo.")
+        await ctx.send("This is only for temp use. Please consider creating a PR/Commit to the bot repo.")
+
+        command = command.lower()
 
         if command in self.commands:
-            await ctx.send("Command already exists as a temp command. please use !delete <command> first")
+            await ctx.send("Command already exists as a temp command. please use !delete <command> or !delcom <command> first")
         else:
             self.commands[command] = reply
             await self._saveToFile()
             await self._loadFromFile()
             await ctx.send(f"Command '{command}' with reply '{reply}' has been added")
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, aliases=["delcom"])
     @commands.has_role("Moderator")
     async def delete(self, ctx: commands.context, command: str) -> None:
         if command in self.commands:
             del self.commands[command]
             await self._saveToFile()
             await self._loadFromFile()
+            await ctx.send(f"Command '{command}' was successfully deleted from my memory")
+        else:
+            NinjaGithub = self.bot.get_cog("NinjaGithub")
+            if command in NinjaGithub.commands:
+                await ctx.send(f"'{command}' is a github command and can only edited on github")
+            else:
+                await ctx.send(f"Command '{command}' is not a dynamic command")
+
     
     async def cog_command_error(self, ctx, error):
         """Post error that happen inside this cog to channel"""
