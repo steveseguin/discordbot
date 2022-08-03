@@ -8,3 +8,4 @@ discordbot.cfg
 .venv
 *.code-workspace
 launch.json
+*.csv
