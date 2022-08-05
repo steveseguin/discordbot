@@ -1,5 +1,11 @@
-spammers.csv
+*.7z
+*.zip
+*.log
+.DS_Store
+_*
+Thumbs.db
 discordbot.cfg
-package-lock.json
-__pycache__/
-*.pyc
+.venv
+*.code-workspace
+launch.json
+*.csv

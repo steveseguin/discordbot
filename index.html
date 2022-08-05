@@ -36,54 +36,52 @@ div:empty {
 	display:none;
 }
 </style>
+<title>#Updates from Discord.VDO.Ninja</title>
 </head>
 <body>
 <div id="main">
-<h1>#Updates from Discord.VDO.Ninja
+<h1>#Updates from <a href="https://discord.vdo.ninja/" target="_blank">Discord.VDO.Ninja</a>
 </div>
 <script>
 
 function timeSince(date) {
+	var seconds = Math.floor((new Date() - date) / 1000);
 
-  var seconds = Math.floor((new Date() - date) / 1000);
+	var interval = seconds / 31536000;
 
-  var interval = seconds / 31536000;
-
-  if (interval > 1) {
-    return Math.floor(interval) + " years";
-  }
-  interval = seconds / 2592000;
-  if (interval > 1) {
-    return Math.floor(interval) + " months";
-  }
-  interval = seconds / 86400;
-  if (interval > 1) {
-    return Math.floor(interval) + " days";
-  }
-  interval = seconds / 3600;
-  if (interval > 1) {
-    return Math.floor(interval) + " hours";
-  }
-  interval = seconds / 60;
-  if (interval > 1) {
-    return Math.floor(interval) + " minutes";
-  }
-  return Math.floor(seconds) + " seconds";
+	if (interval > 1) {
+		return Math.floor(interval) + " years";
+	}
+	interval = seconds / 2592000;
+	if (interval > 1) {
+		return Math.floor(interval) + " months";
+	}
+	interval = seconds / 86400;
+	if (interval > 1) {
+		return Math.floor(interval) + " days";
+	}
+	interval = seconds / 3600;
+	if (interval > 1) {
+		return Math.floor(interval) + " hours";
+	}
+	interval = seconds / 60;
+	if (interval > 1) {
+		return Math.floor(interval) + " minutes";
+	}
+	return Math.floor(seconds) + " seconds";
 }
 
 
-var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c9bfa782503942744b/raw/updates.json").then((response) => response.json())
+var data = fetch("https://gist.githubusercontent.com/lebaston100/edc7b709b41deb012dca4a67b95f0eaf/raw/updates.json").then((response) => response.json())
 	.then((data) => {
 		data.reverse();
-		data.forEach(i=>{
+		data.forEach(message => {
 			var ele = document.createElement("div");
 			ele.className = "entry";
-			console.log(i);
-			var message = i[Object.keys(i)[0]];
-			console.log(message);
+			//console.log(message);
 			
 			var formattedTime = "";
-			if (message.timestamp){
+			if (message.timestamp) {
 				formattedTime = timeSince(parseInt(message.timestamp)*1000);
 				var time = document.createElement("div");
 				time.className = "time";
@@ -94,7 +92,14 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			name.innerText =  message.name;
 			name.className = "name";
 			var content = document.createElement("div");
-			content.innerText =  message.content;
+
+			// do some basic formatting replacements
+			msgCnt = message.content;
+			msgCnt = msgCnt.replaceAll(/<#\d+>/ig, ""); // Discord channel id's
+			msgCnt = msgCnt.replaceAll(/`/ig, ""); // backticks
+			msgCnt = msgCnt.replaceAll(/&[a-zA-Z0-9=]+/ig, "'$&'"); // add '' to all parameters
+
+			content.innerText =  msgCnt;
 			content.className = "content";
 			
 			ele.appendChild(name);
