@@ -195,8 +195,11 @@ general TODO list:
 - (OK) command to add a new command to dynamic file and reload it
 - (OK) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - (OK) add bot activity ("just helping out"?)
+- (OK) add update page logic
 - (HP-Bonus) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
 - (HP-Bonus) replicate auto thread creation that is currently handled by the 3rd party bot
+- (Bonus) Improvement: Add message edits to update page logic (update message event)
+- (Bonus) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) get docs search working again and line it up with other cogs
 - (Bonus) add register and unregister method to main bot class (save first part of command and callback?)
 - (Bonus) use cog_unload to run unregister and update to update (check if valid)
