@@ -78,7 +78,7 @@ var data = fetch("https://gist.githubusercontent.com/lebaston100/edc7b709b41deb0
 		data.forEach(message => {
 			var ele = document.createElement("div");
 			ele.className = "entry";
-			console.log(message);
+			//console.log(message);
 			
 			var formattedTime = "";
 			if (message.timestamp) {
@@ -92,7 +92,14 @@ var data = fetch("https://gist.githubusercontent.com/lebaston100/edc7b709b41deb0
 			name.innerText =  message.name;
 			name.className = "name";
 			var content = document.createElement("div");
-			content.innerText =  message.content;
+
+			// do some basic formatting replacements
+			msgCnt = message.content;
+			msgCnt = msgCnt.replaceAll(/<#\d+>/ig, ""); // Discord channel id's
+			msgCnt = msgCnt.replaceAll(/`/ig, ""); // backticks
+			msgCnt = msgCnt.replaceAll(/&[a-zA-Z0-9=]+/ig, "'$&'"); // add '' to all parameters
+
+			content.innerText =  msgCnt;
 			content.className = "content";
 			
 			ele.appendChild(name);
