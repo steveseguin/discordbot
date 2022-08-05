@@ -1,4 +1,5 @@
 *.7z
+package-lock.json
 *.zip
 *.log
 .DS_Store
