@@ -72,7 +72,7 @@ function timeSince(date) {
 }
 
 
-var data = fetch("https://gist.githubusercontent.com/lebaston100/edc7b709b41deb012dca4a67b95f0eaf/raw/updates.json").then((response) => response.json())
+var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c9bfa782503942744b/raw/updates.json").then((response) => response.json())
 	.then((data) => {
 		data.reverse();
 		data.forEach(message => {
