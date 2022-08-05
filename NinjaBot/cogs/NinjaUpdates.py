@@ -41,7 +41,7 @@ class NinjaUpdates(commands.Cog):
 
                 # fetch gist data
                 async with self.http.get(raw_url) as resp:
-                    logger.debug(await resp.text())
+                    if resp.status != 200: return
                     gistContent = await resp.json(content_type=None)
                     # we rely on the file beeing there and having content
                     # this is to not clear it in case download fails
@@ -62,12 +62,14 @@ class NinjaUpdates(commands.Cog):
                 # only keep the last 40 entrys in list
                 gistContent = gistContent[-40:]
 
-                # send updated data to github
-                patchData = {"files": {
-                    "updates.json": {
-                        "content": json.dumps(gistContent, indent=4)
+                # create data structure for github api
+                patchData = {
+                    "files": {
+                        "updates.json": {
+                            "content": json.dumps(gistContent, indent=4)
+                        }
                     }
-                }}
+                }
 
                 #logger.debug(json.dumps(patchData, indent=4))
                 # send updated data to github
@@ -75,9 +77,8 @@ class NinjaUpdates(commands.Cog):
                     if gistApiResp.status == 200:
                         logger.info("Successfully updated gist data")
                     else:
-                        logger.warn("Error while updating gist data")
-                        logger.warn(await gistApiResp.text())
-                
+                        logger.error("Error while updating gist data")
+                        logger.error(await gistApiResp.text())
             except Exception as E:
                 raise E
 
