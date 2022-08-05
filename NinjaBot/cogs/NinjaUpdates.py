@@ -57,6 +57,7 @@ class NinjaUpdates(commands.Cog):
                 newEntry["timestamp"] = datetime.now().timestamp()
                 newEntry["name"] = message.author.nick or message.author.name
                 newEntry["msgid"] = str(message.id)
+                newEntry["avatar"] = str(message.author.display_avatar.url or "")
                 gistContent.append(newEntry)
 
                 # only keep the last 40 entrys in list
