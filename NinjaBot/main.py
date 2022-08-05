@@ -37,8 +37,9 @@ dcL.setLevel(generalLogLevel)
 dcL.addHandler(rotateFileHnd)
 dcL.addHandler(streamHnd)
 
-logging.getLogger("discord.http").setLevel(generalLogLevel)
-logging.getLogger("discord.gateway").setLevel(generalLogLevel)
+logging.getLogger("discord.http").setLevel(logging.INFO)
+logging.getLogger("discord.gateway").setLevel(logging.INFO)
+logging.getLogger("discord.client").setLevel(logging.INFO)
 
 # NinjaBot logger
 nbL = logging.getLogger("NinjaBot")
@@ -46,6 +47,7 @@ nbL.propagate = False
 nbL.setLevel(generalLogLevel)
 nbL.addHandler(rotateFileHnd)
 nbL.addHandler(streamHnd)
+logger = nbL
 
 # disable voice client warning
 discord.VoiceClient.warn_nacl = False
@@ -74,14 +76,14 @@ class NinjaBot(commands.Bot):
 
     # informational event when bot has finished logging in
     async def on_ready(self) -> None:
-        nbL.info(f"Bot logged in as {self.user}")
+        logger.info(f"Bot logged in as {self.user}")
 
         # load all the extensions we want to use
         # statically defined for security reasons
 
         # internal bot commands (DONE)
         await self.load_extension("cogs.NinjaBotUtils")
-        # spammer detection system (HAS BUGS)
+        # spammer detection system (DONE)
         await self.load_extension("cogs.NinjaAntiSpam")
         # the bot help command (DONE)
         await self.load_extension("cogs.NinjaBotHelp")
@@ -116,7 +118,7 @@ class NinjaBot(commands.Bot):
             if await NinjaGithub.process_command(ctx):
                 return
             # otherwise look elsewhere for command
-            nbL.debug("Command not found by custom handlers, try processing native commands")
+            logger.debug("Command not found by custom handlers, try processing native commands")
             await self.process_commands(message)
     
     # reload all extensions
@@ -124,7 +126,7 @@ class NinjaBot(commands.Bot):
         await ctx.send("Reloading bot extensions")
         try:
             for ext in list(self.extensions.keys()):
-                nbL.debug(f"Reloading extension {ext}")
+                logger.debug(f"Reloading extension {ext}")
                 await self.reload_extension(ext)
         except Exception as E:
             await ctx.send("There was an error while reloading bot extensions:")
@@ -134,40 +136,41 @@ class NinjaBot(commands.Bot):
 
     # handle some errors. this works for extension commands too so no need to redefine in there
     async def on_command_error(self, ctx, err) -> None:
-        nbL.debug(err)
+        logger.debug(err)
         if isinstance(err, discord.ext.commands.MissingPermissions) \
             or isinstance(err, discord.ext.commands.MissingRole):
             # silently ignore no-permissions errors
-            nbL.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
+            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
         elif isinstance(err, discord.ext.commands.CommandNotFound):
-            nbL.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
+            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
         elif isinstance(err, discord.ext.commands.MissingRequiredArgument):
-            nbL.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without providing all required arguments")
+            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without providing all required arguments")
         elif isinstance(err, discord.ext.commands.NoPrivateMessage):
-            nbL.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
+            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
         else:
-            nbL.error(err)
+            logger.error(err)
             raise err
 
 async def main() -> None:
+    logger.info("Starting up NinjaBot V2")
     try:
         await config.parse()
     except Exception as E:
-        nbL.error("Error while parsing the configuration file")
-        nbL.exception(E)
+        logger.error("Error while parsing the configuration file")
+        logger.exception(E)
         return
     
-    nbL.debug(f"Token loaded. Loading bot and extensions.")
+    logger.info(f"Token loaded. Loading bot and extensions.")
 
     nBot = NinjaBot(config)
 
-    nbL.debug("Extensions loaded. Starting server")
+    logger.info("Extensions loaded. Starting server")
     try:
         await nBot.start(config.get("discordBotToken"))
     except KeyboardInterrupt:
         pass
     await nBot.close()
-    nbL.info("Bot process exited. Closing program.")
+    logger.info("Bot process exited. Closing program.")
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
@@ -192,6 +195,8 @@ general TODO list:
 - (OK) command to add a new command to dynamic file and reload it
 - (OK) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - (OK) add bot activity ("just helping out"?)
+- (HP-Bonus) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
+- (HP-Bonus) replicate auto thread creation that is currently handled by the 3rd party bot
 - (Bonus) get docs search working again and line it up with other cogs
 - (Bonus) add register and unregister method to main bot class (save first part of command and callback?)
 - (Bonus) use cog_unload to run unregister and update to update (check if valid)

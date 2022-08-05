@@ -24,7 +24,7 @@ class NinjaAntiSpam(commands.Cog):
         if message.author == self.bot.user \
             or message.author.bot \
             or isinstance(message.channel, discord.DMChannel) \
-            or (message.author.roles and discord.utils.get(message.author.roles, name="Moderator")) \
+            or (hasattr(message.author, "roles") and discord.utils.get(message.author.roles, name="Moderator")) \
             or not (message.type == discord.MessageType.default \
             or message.type == discord.MessageType.reply):
             # ignore messages by bots, moderators and system messages
@@ -62,6 +62,7 @@ class NinjaAntiSpam(commands.Cog):
                 self.h[uid]["abuse"] += 1
                 logger.debug(f"user {self.h[uid]} increased abuse count")
             if self.h[uid]["abuse"] >= 3: # it is spam
+                logger.debug("starting spam cleanup")
                 await self.cleanupMember(message.author)
             else: # it is not spam (at least yet)
                 self.h[uid]["lmts"] = now
@@ -69,32 +70,30 @@ class NinjaAntiSpam(commands.Cog):
 
     # function to kick a member and cleanup their messages
     async def cleanupMember(self, author) -> None:
+        botlogCh = self.bot.get_channel(int(self.bot.config.get("botlogChannel")))
         try:
             await author.kick(reason="Spam")
+            logger.warn(f"{author} has been kicked for spam")
+            await botlogCh.send(f"{author} has been kicked for spam. Spam Report:")
         except Exception as E:
             logger.warn(f"Could not kick user {str(author)}")
 
-        botlogCh = self.bot.get_channel(int(self.bot.config.get("botlogChannel")))
-        logger.warn(f"{author} has been kicked for spam")
-        await botlogCh.send(f"{author} has been kicked for spam. Spam Report:")
-
-        allGone = False
-        while not allGone:
+        while True:
             try:
-                userData = self.h[author.id].copy()
-                # delete user from message buffer
-                logging.debug(userData)
-                if userData:
+                if author.id in self.h:
+                    userData = self.h[author.id].copy()
                     del self.h[author.id]
                     await self.deleteOldMessages(userData["msgs"], botlogCh)
-                    await sleep(1)
+                    logger.debug(userData)
+                    await sleep(2)
                 else:
-                    allGone = True
-            except:
-                pass
-        logging.debug("done doing spam cleanup stuff")
+                    break
+            except Exception as E:
+                logger.exception(E)
+                break
+        logger.debug("done doing spam cleanup stuff")
 
-    async def deleteOldMessages(self, msgs, botlogCh):
+    async def deleteOldMessages(self, msgs, botlogCh) -> None:
         blMsg = ""
         for mid, chid in msgs:
             try:
