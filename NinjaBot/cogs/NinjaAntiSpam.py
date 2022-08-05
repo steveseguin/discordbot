@@ -16,7 +16,7 @@ class NinjaAntiSpam(commands.Cog):
         self.s = SIFT4()
         self.h = {}
         self.historyCleanupJob.start()
-        self.botlogCleanupJob.start()
+        # self.botlogCleanupJob.start() disabled for now
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
