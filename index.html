@@ -97,6 +97,7 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			// do some basic formatting replacements
 			msgCnt = message.content;
 			msgCnt = msgCnt.replaceAll(/<#\d+>/ig, ""); // Discord channel id's
+			msgCnt = msgCnt.replaceAll(/<@\d+>/ig, ""); // Discord user id's
 			msgCnt = msgCnt.replaceAll(/`/ig, ""); // backticks
 			msgCnt = msgCnt.replaceAll(/&[a-zA-Z0-9=]+/ig, "'$&'"); // add '' to all parameters
 
