@@ -75,11 +75,11 @@ function timeSince(date) {
 var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c9bfa782503942744b/raw/updates.json").then((response) => response.json())
 	.then((data) => {
 		data.reverse();
-		data.forEach(i => {
+		data.forEach(message => {
 			var ele = document.createElement("div");
 			ele.className = "entry";
-			console.log(i);
-			var message = i[Object.keys(i)[0]];
+			//console.log(i);
+			//var message = i[Object.keys(i)[0]];
 				
 			var formattedTime = "";
 			if (message.timestamp) {
