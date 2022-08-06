@@ -84,6 +84,7 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			var name = document.createElement("div");
 			name.innerText =  message.name;
 			name.className = "name";			
+			ele.appendChild(name);
 
 			var formattedTime = "";
 			if (message.timestamp) {
@@ -106,7 +107,7 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			content.innerText =  msgCnt;
 			content.className = "content";
 			
-			ele.appendChild(name);
+			
 			ele.appendChild(content);
 			document.getElementById("main").appendChild(ele);
 			
