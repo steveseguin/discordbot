@@ -15,15 +15,15 @@ async def commandProc(self, ctx: Context):
                 # 3rd part stops the bot from replying to itself
                 lastMessage = await utils.get(ctx.channel.history(limit=15), author=ctx.message.mentions[0])
                 lastMessage and await lastMessage.reply(embed=embed)
+                if len(line) > 2: return True
             elif ctx.message.reference:
                 # like above, but reply was used instead of mention
                 initialMessage = await ctx.channel.fetch_message(ctx.message.reference.message_id)
                 not initialMessage.author.bot and await initialMessage.reply(embed=embed)
-                if len(line) > 1:
-                    return True
             else:
                 # every other case
                 await ctx.send(embed=embed)
+            if len(line) > 1: return True
             not isinstance(ctx.channel, DMChannel) and await ctx.message.delete()
             return True
     except Exception as E:
