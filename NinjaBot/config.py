@@ -16,16 +16,16 @@ class Config:
     def get(self, key):
         """return a config option by the given key"""
         return self._configOptions[key]
-    
+
     def has(self, key):
         return bool(key in self._configOptions)
 
     async def set(self, key, newVal) -> None:
         """set a config option to a new value + trigger flush"""
         self._configOptions[key] = newVal
-        logger.debug(f"changed {key} to {newVal}")
         await self._flushToFile()
-    
+        logger.debug(f"changed {key} to {newVal}")
+
     async def _flushToFile(self) -> None:
         """Write config options from memory to file"""
-        self._fh.write(self._configOptions)
+        await self._fh.write(self._configOptions)

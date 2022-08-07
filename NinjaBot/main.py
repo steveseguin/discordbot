@@ -159,7 +159,7 @@ async def main() -> None:
         logger.error("Error while parsing the configuration file")
         logger.exception(E)
         return
-    
+
     logger.info(f"Token loaded. Loading bot and extensions.")
 
     nBot = NinjaBot(config)
@@ -178,27 +178,27 @@ if __name__ == "__main__":
 
 """
 general TODO list:
-- (OK) load commands file from github (hot reloadable)
-- (OK) make content from github commands usable
-- (OK) make embed generation into it's own class that inherits from Embed
-- (OK) make bot into it's own class
-- (OK) make bot delete the message that invoked it
-- (OK) use embeds for responses where possible
-- (OK) if user was pinged in command then ping user in response
-- (OK) make commands only work at start of message
-- (OK) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
-- (OK) if command is used in reply to another user, replace that reply with bot reply
-- (OK) rework logging and add optional file logger
-- (OK) spammer detection with kick/ban
-- (OK) load commands from dynamic file (hot reloadable)
-- (OK) make content from dynamic file usable
-- (OK) command to add a new command to dynamic file and reload it
-- (OK) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
-- (OK) add bot activity ("just helping out"?)
-- (OK) add update page logic
-- (HP-Bonus) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
-- (HP-Bonus) replicate auto thread creation that is currently handled by the 3rd party bot
-- (Bonus) Improvement: Add message edits to update page logic (update message event)
+- (DONE) load commands file from github (hot reloadable)
+- (DONE) make content from github commands usable
+- (DONE) make embed generation into it's own class that inherits from Embed
+- (DONE) make bot into it's own class
+- (DONE) make bot delete the message that invDONEed it
+- (DONE) use embeds for responses where possible
+- (DONE) if user was pinged in command then ping user in response
+- (DONE) make commands only work at start of message
+- (DONE) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
+- (DONE) if command is used in reply to another user, replace that reply with bot reply
+- (DONE) rework logging and add optional file logger
+- (DONE) spammer detection with kick/ban
+- (DONE) load commands from dynamic file (hot reloadable)
+- (DONE) make content from dynamic file usable
+- (DONE) command to add a new command to dynamic file and reload it
+- (DONE) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
+- (DONE) add bot activity ("just helping out"?)
+- (DONE) add update page logic
+- (DONE) Add message edits to update page logic
+- (HP-Bonus) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
+- (HP-Bonus) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
 - (Bonus) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) get docs search working again and line it up with other cogs
 - (Bonus) add register and unregister method to main bot class (save first part of command and callback?)
