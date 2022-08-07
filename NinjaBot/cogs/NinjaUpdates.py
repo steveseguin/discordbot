@@ -1,7 +1,9 @@
 import logging
+import re
 import discord
 import aiohttp
 import json
+from functools import partial
 from discord.ext import commands
 from datetime import datetime
 
@@ -98,11 +100,20 @@ class NinjaUpdates(commands.Cog):
 
     async def formatMessageContent(self, message: discord.Message) -> str:
         content = message.content
-        #logger.debug(message.mentions)
-        #logger.debug(message.channel_mentions)
-        # TODO do replacements here
-        # get names from message.channel_mentions and message.mentions
+        content = re.sub(r"<#(\d+)>", partial(self.replacer, message=message, what="channel"), content, flags=re.I)
+        content = re.sub(r"<@(\d+)>", partial(self.replacer, message=message, what="user"), content, flags=re.I)
         return content
+
+    def replacer(self, matchobj, message, what):
+        if what == "channel":
+            channel = next(filter(lambda c: str(c.id) == matchobj.group(1), message.channel_mentions), None)
+            if channel:
+                return "#" + channel.name
+        elif what == "user":
+            user = next(filter(lambda c: str(c.id) == matchobj.group(1), message.mentions), None)
+            if user:
+                return "@" + user.name
+        return ""
 
     async def getCommands(self) -> list:
         """Return the available commands as a list"""

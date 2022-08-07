@@ -196,12 +196,13 @@ general TODO list:
 - (DONE) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
 - (DONE) add bot activity ("just helping out"?)
 - (DONE) add update page logic
-- (DONE) Add message edits to update page logic
-- (HP-Bonus) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
-- (HP-Bonus) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
+- (DONE) Watch message edits to update page logic
+- (DONE) replace usernames and channelid's in updates message with their names
+- (TODO) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
+- (TODO) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
 - (Bonus) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) get docs search working again and line it up with other cogs
-- (Bonus) add register and unregister method to main bot class (save first part of command and callback?)
-- (Bonus) use cog_unload to run unregister and update to update (check if valid)
-- (Bonus) improve spam detection by factoring in message posting speed?
+- (Bonus) Improvement: add register and unregister method to main bot class (save first part of command and callback?)
+- (Bonus) Improvement: use cog_unload to run unregister and update to update (check if valid)
+- (Bonus) Improvement: improve spam detection by factoring in message posting speed?
 """
