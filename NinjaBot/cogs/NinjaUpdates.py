@@ -49,7 +49,7 @@ class NinjaUpdates(commands.Cog):
                     if not gistContent: return
 
                 # Search for existing message id in the current gist content
-                prevMessage = next(filter(lambda m: m["msgid"] == str(message.id), gistContent), False)
+                prevMessage = next(filter(lambda m: "msgid" in m and m["msgid"] == str(message.id), gistContent), False)
                 if prevMessage:
                     # This is an update to an existing message
                     messagePos = gistContent.index(prevMessage)
