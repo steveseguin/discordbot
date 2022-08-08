@@ -24,7 +24,8 @@ class NinjaReddit(commands.Cog):
     async def redditChecker(self) -> None:
         logger.debug("Running reddit checker")
         try:
-            lastSubmission = self.bot.config.get("redditLastSubmission")
+            lastSubmission = self.bot.config.get("redditLastSubmission") or ""
+            logger.debug(f"Current last submission is: '{lastSubmission}'")
             toPostSubmissions = []
             # get subreddit and submissions
             ninjaSubreddit = await self.Reddit.subreddit("VDONinja")
@@ -33,12 +34,12 @@ class NinjaReddit(commands.Cog):
                 if submission.id == lastSubmission:
                     break
                 # since post was not yet posted, add to posting queue
-                toPostSubmissions.append(submission)              
+                toPostSubmissions.append(submission)
         except Exception as E:
             logger.debug("Error while polling reddit submissions")
             raise E
         else:
-            # if we got result reverse order otherwise just return because there is nothing to do
+            # if we got result, reverse order otherwise just return because there is nothing to do
             if toPostSubmissions:
                 toPostSubmissions.reverse()
             else:

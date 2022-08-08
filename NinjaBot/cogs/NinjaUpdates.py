@@ -1,8 +1,9 @@
-from hashlib import new
 import logging
+import re
 import discord
 import aiohttp
 import json
+from functools import partial
 from discord.ext import commands
 from datetime import datetime
 
@@ -17,7 +18,7 @@ class NinjaUpdates(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
-        # Check if config options are there and are the expected valuess
+        # Check if config options are there and are the expected values
         if (self.bot.config.has("updatesChannel") \
             and self.bot.config.has("allowedUpdateUsers") \
             and message.channel.id == int(self.bot.config.get("updatesChannel")) \
@@ -47,19 +48,26 @@ class NinjaUpdates(commands.Cog):
                     # this is to not clear it in case download fails
                     if not gistContent: return
 
+                # Search for existing message id in the current gist content
+                prevMessage = next(filter(lambda m: m["msgid"] == str(message.id), gistContent), False)
+                if prevMessage:
+                    # This is an update to an existing message
+                    messagePos = gistContent.index(prevMessage)
+                    oldEntry = gistContent[messagePos]
+                    oldEntry["content"] = await self.formatMessageContent(message)
+                    gistContent[messagePos] = oldEntry
+                else:
+                    # create new entry and add to gistContent
+                    newEntry = dict()
+                    newEntry["content"] = await self.formatMessageContent(message)
+                    newEntry["timestamp"] = datetime.now().timestamp()
+                    newEntry["name"] = message.author.nick or message.author.name
+                    newEntry["msgid"] = str(message.id)
+                    newEntry["avatar"] = str(message.author.display_avatar.url or "")
+                    gistContent.append(newEntry)
+
                 # order gistContent by timestamp
                 gistContent = sorted(gistContent, key=lambda k: k["timestamp"])
-                logger.debug(f"current gist length: {len(gistContent)}")
-
-                # create new entry and add to gistContent
-                newEntry = dict()
-                newEntry["content"] = message.content
-                newEntry["timestamp"] = datetime.now().timestamp()
-                newEntry["name"] = message.author.nick or message.author.name
-                newEntry["msgid"] = str(message.id)
-                newEntry["avatar"] = str(message.author.display_avatar.url or "")
-                gistContent.append(newEntry)
-
                 # only keep the last 40 entrys in list
                 gistContent = gistContent[-40:]
 
@@ -72,7 +80,7 @@ class NinjaUpdates(commands.Cog):
                     }
                 }
 
-                #logger.debug(json.dumps(patchData, indent=4))
+                #logger.debug(json.dumps(gistContent, indent=4))
                 # send updated data to github
                 async with self.http.patch(f"https://api.github.com/gists/{self.bot.config.get('githubGistId')}", json=patchData, headers=ghHeaders) as gistApiResp:
                     if gistApiResp.status == 200:
@@ -82,6 +90,30 @@ class NinjaUpdates(commands.Cog):
                         logger.error(await gistApiResp.text())
             except Exception as E:
                 raise E
+    
+    @commands.Cog.listener()
+    async def on_raw_message_edit(self, partialMessage) -> None:
+        if partialMessage.channel_id != int(self.bot.config.get("updatesChannel")): return # Ignore everything not from the update channel
+        channel = self.bot.get_channel(partialMessage.channel_id)
+        message = await channel.fetch_message(partialMessage.message_id)
+        await self.on_message(message)
+
+    async def formatMessageContent(self, message: discord.Message) -> str:
+        content = message.content
+        content = re.sub(r"<#(\d+)>", partial(self.replacer, message=message, what="channel"), content, flags=re.I)
+        content = re.sub(r"<@(\d+)>", partial(self.replacer, message=message, what="user"), content, flags=re.I)
+        return content
+
+    def replacer(self, matchobj, message, what):
+        if what == "channel":
+            channel = next(filter(lambda c: str(c.id) == matchobj.group(1), message.channel_mentions), None)
+            if channel:
+                return "#" + channel.name
+        elif what == "user":
+            user = next(filter(lambda c: str(c.id) == matchobj.group(1), message.mentions), None)
+            if user:
+                return "@" + user.name
+        return ""
 
     async def getCommands(self) -> list:
         """Return the available commands as a list"""
