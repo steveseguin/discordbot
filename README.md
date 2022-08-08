@@ -13,10 +13,12 @@ sudo python3 main.py
 ```
 
 ### Setup
-You need to create an app in Discord, then a bot of that app, then an invite link with Administrator permissions enabled. [Discord Guide](https://discordpy.readthedocs.io/en/stable/discord.html)
+Discord API: You need to create an app in Discord, then a bot of that app, then an invite link with Administrator permissions enabled. [Discord Guide](https://discordpy.readthedocs.io/en/stable/discord.html)
 
 You need to then use the token as "discordBotToken" for that bot in the cfg file, renaming it to discordbot.cfg
 
-You also have to create an app on reddit and paste the client id and client secret into the config file. (redditClientId and redditClientSecret)
+Reddit API: You also have to create an app on reddit and paste the client id and client secret into the config file. ("redditClientId" and "redditClientSecret" in the discordbot.cfg)
+
+Youtube API: You have to create an app in the google api console, then enable the "YouTube Data API v3" and create a new API key. ("youtubeApiKey" in the discordbot.cfg)
 
 Advanced users should setup the script as a system service, so it auto restarts as needed or run everything inside a docker container.

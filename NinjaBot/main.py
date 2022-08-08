@@ -93,8 +93,11 @@ class NinjaBot(commands.Bot):
         await self.load_extension("cogs.NinjaDynCmds")
         # reddit events (DONE)
         await self.load_extension("cogs.NinjaReddit")
-        # updates.vdon.ninja page (TODO)
+        # youtube uploads (DONE)
+        await self.load_extension("cogs.NinjaYoutube")
+        # updates.vdon.ninja page (DONE)
         await self.load_extension("cogs.NinjaUpdates")
+
         # docs search tool (currently broken, TODO)
         #await self.load_extension("cogs.NinjaDocs")
 
@@ -198,6 +201,7 @@ general TODO list:
 - (DONE) add update page logic
 - (DONE) Watch message edits to update page logic
 - (DONE) replace usernames and channelid's in updates message with their names
+- (DONE) Add youtube integration for steve's channel
 - (TODO) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
 - (TODO) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
 - (Bonus) Improvement: convert discord formatting into html for update page (include images and user avatar)
