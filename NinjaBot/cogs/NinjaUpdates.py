@@ -119,7 +119,7 @@ class NinjaUpdates(commands.Cog):
 
     def getAttachments(self, message):
         if not message.attachments: return []
-        return [{"mine": m.content_type or "", "url": m.url or "", "desc": m.description or None} for m in message.attachments]
+        return [{"mime": m.content_type or "", "url": m.url or "", "desc": m.description or None} for m in message.attachments]
 
     async def getCommands(self) -> list:
         """Return the available commands as a list"""
