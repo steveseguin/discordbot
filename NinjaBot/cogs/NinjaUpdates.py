@@ -55,6 +55,7 @@ class NinjaUpdates(commands.Cog):
                     messagePos = gistContent.index(prevMessage)
                     oldEntry = gistContent[messagePos]
                     oldEntry["content"] = await self.formatMessageContent(message)
+                    oldEntry["attachments"] = self.getAttachments(message)
                     gistContent[messagePos] = oldEntry
                 else:
                     # create new entry and add to gistContent
@@ -64,6 +65,7 @@ class NinjaUpdates(commands.Cog):
                     newEntry["name"] = message.author.nick or message.author.name
                     newEntry["msgid"] = str(message.id)
                     newEntry["avatar"] = str(message.author.display_avatar.url or "")
+                    newEntry["attachments"] = self.getAttachments(message)
                     gistContent.append(newEntry)
 
                 # order gistContent by timestamp
@@ -114,6 +116,10 @@ class NinjaUpdates(commands.Cog):
             if user:
                 return "@" + user.name
         return ""
+
+    def getAttachments(self, message):
+        if not message.attachments: return []
+        return [{"mine": m.content_type or "", "url": m.url or "", "desc": m.description or None} for m in message.attachments]
 
     async def getCommands(self) -> list:
         """Return the available commands as a list"""
