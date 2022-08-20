@@ -38,6 +38,7 @@ class NinjaReddit(commands.Cog):
         except Exception as E:
             logger.debug("Error while polling reddit submissions")
             logger.exception(E)
+            return
         else:
             # if we got result, reverse order otherwise just return because there is nothing to do
             if toPostSubmissions:
