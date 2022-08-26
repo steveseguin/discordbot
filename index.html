@@ -11,26 +11,37 @@ body {
 	background: #0021;
 }
 
-div:nth-child(even) {
-  background: #0001;
+#main>div div:nth-child(even) {
+	background: #0001;
 }
 
 .entry {
 	display:block;
 }
 .content {
+	display:block;
+}
+.avatar {
 	display:inline-block;
+	max-height:32px;
+	max-width:32px;
+	vertical-align: top;
+	border-radius: 32px;
+	margin: 3px;
+   	margin-right: 4px;
 }
 .name {
 	display:inline-block;
 	font-weight: bold;
+	vertical-align: top;
 }
 .time {
 	display: inline-block;
-    font-style: italic;
-    font-size: 11px;
-    position: relative;
-    top: -1px;
+	font-style: italic;
+	font-size: 11px;
+	position: relative;
+	top: 4px;
+	vertical-align: top;
 }
 div:empty {
 	display:none;
@@ -80,11 +91,21 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			ele.className = "entry";
 			//console.log(i);
 			//var message = i[Object.keys(i)[0]];
-			
+
+			var avatar = document.createElement("img");
+			avatar.src =  message.avatar;
+			avatar.className = "avatar";	
+			avatar.onerror = function(){
+				this.style.opacity="0";
+			};		
+			ele.appendChild(avatar);
+
 			var name = document.createElement("div");
 			name.innerText =  message.name;
 			name.className = "name";			
 			ele.appendChild(name);
+
+
 
 			var formattedTime = "";
 			if (message.timestamp) {
