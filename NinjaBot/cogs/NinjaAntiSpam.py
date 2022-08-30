@@ -57,7 +57,7 @@ class NinjaAntiSpam(commands.Cog):
             # calculate message distance using sift4
             dist = self.s.distance(self.h[uid]["lm"], msg)
             logger.debug(f"sift4 distance: {dist}")
-            if dist <= 4:
+            if dist <= 3:
                 # messages are too close
                 self.h[uid]["abuse"] += 1
                 logger.debug(f"user {self.h[uid]} increased abuse count")
