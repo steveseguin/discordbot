@@ -1,8 +1,10 @@
 import logging
 import discord
 import embedBuilder
+import re
 from asyncio import sleep
 from discord.ext import commands, tasks
+from discord import DMChannel
 from datetime import datetime, timedelta
 from strsimpy import SIFT4
 
@@ -67,16 +69,26 @@ class NinjaAntiSpam(commands.Cog):
             else: # it is not spam (at least yet)
                 self.h[uid]["lmts"] = now
                 self.h[uid]["lm"] = msg
+        
+        # filter discord invite links no matter what the spam score is
+        if re.findall(r"(https?://)?(www\.)?((discord\.(gg|io|me|li))|(discord(app)?\.com/invite))/\S{,20}", msg):
+            logger.info("Discord invite link found, deleting message")
+            self.h[uid]["abuse"] += 1 # still increase the abuse count
+            await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
+            await sleep(2)
+            not isinstance(message.channel, DMChannel) and await message.delete()
 
-    # function to kick a member and cleanup their messages
-    async def cleanupMember(self, author) -> None:
+    # function to (kick a member and) cleanup their messages
+    async def cleanupMember(self, author, kick=True) -> None:
         botlogCh = self.bot.get_channel(int(self.bot.config.get("botlogChannel")))
-        try:
-            await author.kick(reason="Spam")
-            logger.warn(f"{author} has been kicked for spam")
-            await botlogCh.send(f"{author} has been kicked for spam. Spam Report:")
-        except Exception as E:
-            logger.warn(f"Could not kick user {str(author)}")
+
+        if kick:
+            try:
+                await author.kick(reason="Spam")
+                logger.warn(f"{author} has been kicked for spam")
+                await botlogCh.send(f"{author} has been kicked for spam. Spam Report:")
+            except Exception as E:
+                logger.warn(f"Could not kick user {str(author)}")
 
         while True:
             try:
