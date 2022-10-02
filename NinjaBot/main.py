@@ -110,7 +110,7 @@ class NinjaBot(commands.Bot):
 
         # for funsies
         await self.change_presence(status=discord.Status.online, activity=discord.Game("helping hand"))
-
+        logger.info("Bot is done loading")
 
     async def on_message(self, message: discord.Message) -> None:
         ctx = await self.get_context(message)
