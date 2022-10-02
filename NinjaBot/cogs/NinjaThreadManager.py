@@ -95,30 +95,42 @@ class NinjaThreadManager(commands.Cog):
         await interaction.response.send_message(f"Archiving thread", ephemeral=True)
         if not interaction.channel.archived: await interaction.channel.edit(archived=True, reason="NinjaBot")
 
-    @commands.command(hidden=True)
-    @commands.has_role("Moderator")
-    @commands.guild_only()
-    async def login(self, ctx) -> None:
+    @app_commands.command()
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def login(self, interaction: discord.Interaction) -> None:
         """Login to automatic pings for support thread creations"""
-        pass
+        loggedOnSupportStaff = self.bot.config.get("loggedOnSupportStaff")
+        if interaction.user.mention in loggedOnSupportStaff:
+            await interaction.response.send_message(f"You are already logged in to NinjaSupport! :x:", ephemeral=True)
+            return
+        loggedOnSupportStaff.append(interaction.user.mention)
+        await self.bot.config.set("loggedOnSupportStaff", loggedOnSupportStaff)
+        await interaction.response.send_message(f"You are now logged in to NinjaSupport :white_check_mark: :bell:", ephemeral=True)
 
-    @commands.command(hidden=True)
-    @commands.has_role("Moderator")
-    @commands.guild_only()
-    async def logout(self, ctx) -> None:
+    @app_commands.command()
+    @app_commands.guild_only()
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def logout(self, interaction: discord.Interaction) -> None:
         """Logout from automatic pings for support thread creations"""
-        pass
+        loggedOnSupportStaff = self.bot.config.get("loggedOnSupportStaff")
+        if interaction.user.mention not in loggedOnSupportStaff:
+            await interaction.response.send_message(f"You are not logged in to NinjaSupport! :x:", ephemeral=True)
+            return
+        loggedOnSupportStaff.remove(interaction.user.mention)
+        await self.bot.config.set("loggedOnSupportStaff", loggedOnSupportStaff)
+        await interaction.response.send_message(f"You are now logged out of NinjaSupport :zzz: :no_bell:", ephemeral=True)
 
     async def cog_command_error(self, ctx, error) -> None:
         """Post error that happen inside this cog to channel"""
         await ctx.send(error)
     
-    # get the first 14 words of a message or 40 chars
+    # get the first 10 words of a message or 30 chars
     def _getThreadTitle(self, message) -> None:
-        match = re.match(r"^(?:\w+\s){1,14}", message)
+        match = re.match(r"^(?:\w+\s){1,10}", message)
         if match:
             return match.group(0)
-        return message[:40]
+        return message[:30]
 
     async def getCommands(self) -> list:
         """Return the available commands as a list"""
