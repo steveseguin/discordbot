@@ -115,8 +115,10 @@ class NinjaBot(commands.Bot):
     async def on_message(self, message: discord.Message) -> None:
         ctx = await self.get_context(message)
 
-        if ctx.author == self.user or ctx.author.bot:
-            # ignore messages by the bot itself or other bots
+        if (ctx.author == self.user \
+            or ctx.author.bot \
+            or str(ctx.channel.id) in self.config.get("autoThreadEnabledChannels")):
+            # ignore messages by the bot itself or other bots or autoThread channels
             return
         elif ctx.message.content.startswith(self.config.get("commandPrefix")):
             # might be a command. pass it around to see if anyone wants to deal with it
