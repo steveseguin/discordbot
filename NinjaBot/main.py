@@ -206,7 +206,7 @@ general TODO list:
 - (DONE) load commands from dynamic file (hot reloadable)
 - (DONE) make content from dynamic file usable
 - (DONE) command to add a new command to dynamic file and reload it
-- (DONE) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
+- (DONE) reddit integration for new posts to reddit channel (asyncpraw)
 - (DONE) add bot activity ("just helping out"?)
 - (DONE) add update page logic
 - (DONE) Watch message edits to update page logic
