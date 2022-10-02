@@ -12,7 +12,7 @@ from config import Config
 LOCALDIR = pathlib.Path(__file__).parent.resolve()
 
 # setup logger
-generalLogLevel = logging.DEBUG
+generalLogLevel = logging.INFO
 formatter = logging.Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
 
 # rotating log file handler
@@ -213,7 +213,7 @@ general TODO list:
 - (DONE) replace usernames and channelid's in updates message with their names
 - (DONE) Add youtube integration for steve's channel
 - (DONE) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
-- (TODO) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
+- (DONE) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
 - (Bonus) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) get docs search working again and line it up with other cogs
 - (Bonus) Improvement: add register and unregister method to main bot class (save first part of command and callback?)
