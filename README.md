@@ -22,3 +22,12 @@ Reddit API: You also have to create an app on reddit and paste the client id and
 Youtube API: You have to create an app in the google api console, then enable the "YouTube Data API v3" and create a new API key. ("youtubeApiKey" in the discordbot.cfg)
 
 Advanced users should setup the script as a system service, so it auto restarts as needed or run everything inside a docker container.
+
+### Notes
+
+https://updates.vdo.ninja is where #update channel updates are posted, created via this bot
+
+## Contributors of this repo
+<a href="https://github.com/steveseguin/discordbot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=steveseguin/discordbot" />
+</a>
