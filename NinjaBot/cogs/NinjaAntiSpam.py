@@ -74,9 +74,11 @@ class NinjaAntiSpam(commands.Cog):
         if re.findall(r"(https?://)?(www\.)?((discord\.(gg|io|me|li))|(discord(app)?\.com/invite))/\S{,20}", msg):
             logger.info("Discord invite link found, deleting message")
             self.h[uid]["abuse"] += 1 # still increase the abuse count
-            await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
-            await sleep(2)
+            botmsg = await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
+            await sleep(1)
             not isinstance(message.channel, DMChannel) and await message.delete()
+            await sleep(5)
+            not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
 
     # function to (kick a member and) cleanup their messages
     async def cleanupMember(self, author, kick=True) -> None:
