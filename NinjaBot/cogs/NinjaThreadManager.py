@@ -101,7 +101,7 @@ class NinjaThreadManager(commands.Cog):
         if not isinstance(interaction.channel, discord.Thread):
             await interaction.response.send_message("You can't close this since it's not a thread", ephemeral=True)
             return
-        await interaction.response.send_message(f"Archiving thread", ephemeral=True)
+        await interaction.response.send_message(f"Thread was archived by {interaction.user.display_name}. Anyone can send a message to unarchive it.")
         if not interaction.channel.archived: await interaction.channel.edit(archived=True, reason="NinjaBot")
 
     @app_commands.command()
