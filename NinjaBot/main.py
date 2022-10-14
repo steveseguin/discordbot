@@ -12,7 +12,7 @@ from config import Config
 LOCALDIR = pathlib.Path(__file__).parent.resolve()
 
 # setup logger
-generalLogLevel = logging.DEBUG
+generalLogLevel = logging.INFO
 formatter = logging.Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
 
 # rotating log file handler
@@ -81,35 +81,44 @@ class NinjaBot(commands.Bot):
         # load all the extensions we want to use
         # statically defined for security reasons
 
-        # internal bot commands (DONE)
+        # internal bot commands
         await self.load_extension("cogs.NinjaBotUtils")
-        # spammer detection system (DONE)
+        # spammer detection system
         await self.load_extension("cogs.NinjaAntiSpam")
-        # the bot help command (DONE)
+        # the bot help command
         await self.load_extension("cogs.NinjaBotHelp")
-        # commands from github (DONE)
+        # commands from github
         await self.load_extension("cogs.NinjaGithub")
-        # commands added through the bot (DONE)
+        # commands added through the bot
         await self.load_extension("cogs.NinjaDynCmds")
-        # reddit events (DONE)
+        # reddit events
         await self.load_extension("cogs.NinjaReddit")
-        # youtube uploads (DONE)
+        # youtube uploads
         await self.load_extension("cogs.NinjaYoutube")
-        # updates.vdon.ninja page (DONE)
+        # updates.vdon.ninja page
         await self.load_extension("cogs.NinjaUpdates")
+        # auto-thread manager
+        await self.load_extension("cogs.NinjaThreadManager")
 
         # docs search tool (currently broken, TODO)
         #await self.load_extension("cogs.NinjaDocs")
 
+        # takes care of pushing all application commands to discord
+        guild = int(self.config.get("guild"))
+        self.tree.copy_global_to(guild=discord.Object(id=guild))
+        await self.tree.sync(guild=discord.Object(id=guild))
+
         # for funsies
         await self.change_presence(status=discord.Status.online, activity=discord.Game("helping hand"))
-
+        logger.info("Bot is done loading")
 
     async def on_message(self, message: discord.Message) -> None:
         ctx = await self.get_context(message)
 
-        if ctx.author == self.user or ctx.author.bot:
-            # ignore messages by the bot itself or other bots
+        if (ctx.author == self.user \
+            or ctx.author.bot \
+            or str(ctx.channel.id) in self.config.get("autoThreadEnabledChannels")):
+            # ignore messages by the bot itself or other bots or autoThread channels
             return
         elif ctx.message.content.startswith(self.config.get("commandPrefix")):
             # might be a command. pass it around to see if anyone wants to deal with it
@@ -129,8 +138,9 @@ class NinjaBot(commands.Bot):
         await ctx.send("Reloading bot extensions")
         try:
             for ext in list(self.extensions.keys()):
-                logger.debug(f"Reloading extension {ext}")
-                await self.reload_extension(ext)
+                if ext != "cogs.NinjaThreadManager":
+                    logger.debug(f"Reloading extension {ext}")
+                    await self.reload_extension(ext)
         except Exception as E:
             await ctx.send("There was an error while reloading bot extensions:")
             await ctx.send(E)
@@ -196,14 +206,14 @@ general TODO list:
 - (DONE) load commands from dynamic file (hot reloadable)
 - (DONE) make content from dynamic file usable
 - (DONE) command to add a new command to dynamic file and reload it
-- (DONE) reddit integration for new posts to reddit channel (https://praw.readthedocs.io/en/stable/)
+- (DONE) reddit integration for new posts to reddit channel (asyncpraw)
 - (DONE) add bot activity ("just helping out"?)
 - (DONE) add update page logic
 - (DONE) Watch message edits to update page logic
 - (DONE) replace usernames and channelid's in updates message with their names
 - (DONE) Add youtube integration for steve's channel
-- (TODO) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
-- (TODO) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
+- (DONE) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
+- (DONE) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
 - (Bonus) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) get docs search working again and line it up with other cogs
 - (Bonus) Improvement: add register and unregister method to main bot class (save first part of command and callback?)

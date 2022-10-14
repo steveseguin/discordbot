@@ -56,7 +56,7 @@ class NinjaReddit(commands.Cog):
                     newLastSubmission = submission.id
                     await sleep(2) # do some reate limiting ourselfs
             except Exception as E:
-                raise E
+                logger.exception(E)
             finally:
                 # update id of last post to what was the sucessfully sent last
                 await self.bot.config.set("redditLastSubmission", newLastSubmission)
