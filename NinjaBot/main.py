@@ -12,7 +12,7 @@ from config import Config
 LOCALDIR = pathlib.Path(__file__).parent.resolve()
 
 # setup logger
-generalLogLevel = logging.INFO
+generalLogLevel = logging.DEBUG
 formatter = logging.Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
 
 # rotating log file handler
