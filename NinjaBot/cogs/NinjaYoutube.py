@@ -56,7 +56,7 @@ class NinjaYoutube(commands.Cog):
                     newLastSubmission = video["id"]["videoId"]
                     await sleep(2) # do some reate limiting ourselfs
             except Exception as E:
-                raise E
+                logger.exception(E)
             finally:
                 # update id of last video to what was the sucessfully sent last
                 await self.bot.config.set("youtubeLastVideo", newLastSubmission)
