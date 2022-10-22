@@ -53,17 +53,22 @@ class NinjaThreadManager(commands.Cog):
         if (not ctx.author == self.bot.user and not ctx.author.bot \
             and not isinstance(ctx.message.channel, discord.DMChannel) \
             and self.bot.config.has("autoThreadEnabledChannels") \
-            and self.bot.config.has("autoThreadWelcomeText") \
+            and self.bot.config.has("autoThreadWelcomeMapping") \
             and str(ctx.channel.id) in self.bot.config.get("autoThreadEnabledChannels")):
 
             # Create thread
             createdThread = await ctx.message.create_thread(name=self._getThreadTitle(ctx.message.content), auto_archive_duration=1440, reason=__name__)
             # create embed from welcome message
-            welcomeText = self.bot.config.get("autoThreadWelcomeText")
-            welcomeText = welcomeText.format(usermention=ctx.message.author.mention)
-            embed = embedBuilder.ninjaEmbed(description=welcomeText)
-            # Post welcome message to thread
-            await createdThread.send(embed=embed, view=ThreadManagementButtons(self))
+            welcomeMapping = self.bot.config.get("autoThreadWelcomeMapping")
+            try:
+                welcomeText = self.bot.config.get(welcomeMapping[str(ctx.channel.id)])
+                welcomeText = welcomeText.format(usermention=ctx.message.author.mention)
+                embed = embedBuilder.ninjaEmbed(description=welcomeText)
+                # Post welcome message to thread
+                await createdThread.send(embed=embed, view=ThreadManagementButtons(self))
+            except:
+                # No welcome message
+                pass
 
             # add logged in staff to thread
             loggedOnSupportStaff = self.bot.config.get("loggedOnSupportStaff")   
