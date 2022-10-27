@@ -57,7 +57,7 @@ class NinjaThreadManager(commands.Cog):
             and str(ctx.channel.id) in self.bot.config.get("autoThreadEnabledChannels")):
 
             # Create thread
-            createdThread = await ctx.message.create_thread(name=self._getThreadTitle(ctx.message.content), auto_archive_duration=1440, reason=__name__)
+            createdThread = await ctx.message.create_thread(name=self._getThreadTitle(ctx.message.content), auto_archive_duration=10080, reason=__name__)
             # create embed from welcome message
             welcomeMapping = self.bot.config.get("autoThreadWelcomeMapping")
             try:
