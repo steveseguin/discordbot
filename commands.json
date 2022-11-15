@@ -1,6 +1,6 @@
 {
     "advanced": "To apply **advanced parameters** please read this wiki page more info <https://docs.vdo.ninja/advanced-settings>",
-    "android": "Android app here: https://drive.google.com/file/d/1M0kv5nWLtcfl2JOnsAGiG1zUmkeIVLyZ/view",
+    "android": "Android app is available on the Google Play store here: https://play.google.com/store/apps/details?id=flutter.vdo.ninja&hl=en_CA&gl=US, or as a direct APK download here: https://drive.google.com/file/d/1M0kv5nWLtcfl2JOnsAGiG1zUmkeIVLyZ/view",
     "audio": "Learn more about VDO Ninja stereo modes and audio quality here: https://docs.google.com/spreadsheets/d/e/2PACX-1vS7Up5jgXPcmg_tN52JLgXBZG3wfHB3pZDQWimzxixiuRIDbeMdmU11fgrMpdYFT6yy4Igrkc9hnReY/pubhtml",
     "audiomonitor": "Checkout the audio monitor plugin to send specific obs audio sources to VDO Ninja <https://obsproject.com/forum/resources/audio-monitor.1186/>",
     "automation": "<https://github.com/steveseguin/vdo.ninja/blob/quickstart/automation/cheatsheet_obsn_automation.md>",
