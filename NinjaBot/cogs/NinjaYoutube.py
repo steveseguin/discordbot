@@ -33,6 +33,7 @@ class NinjaYoutube(commands.Cog):
                 toPostVideos = []
                 for video in response["items"]:
                     if video["kind"] != "youtube#searchResult" and video["id"]["kind"] != "youtube#video": continue
+                    if video["snippet"]["description"] and "#VDO.Ninja" not in video["snippet"]["description"]: continue
                     if video["id"]["videoId"] == lastVideo: break
                     # since video was not yet posted, add to posting queue
                     toPostVideos.append(video)
