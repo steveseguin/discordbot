@@ -23,7 +23,8 @@ class NinjaYoutube(commands.Cog):
                 channelId=self.bot.config.get("youtubeChannelId"),
                 maxResults=5,
                 order="date",
-                safeSearch="none"
+                safeSearch="none",
+                type="video"
             )
             response = request.execute()
 
@@ -31,9 +32,14 @@ class NinjaYoutube(commands.Cog):
                 lastVideo = self.bot.config.get("youtubeLastVideo") or ""
                 logger.debug(f"Current lastVideo is: '{lastVideo}'")
                 toPostVideos = []
+                logger.debug(response["items"])
                 for video in response["items"]:
                     if video["kind"] != "youtube#searchResult" and video["id"]["kind"] != "youtube#video": continue
-                    if video["snippet"]["description"] and "#VDO.Ninja" not in video["snippet"]["description"]: continue
+                    if not video["snippet"]["description"]: continue
+                    if not video["snippet"]["title"]: continue
+                    #if "#VDO.Ninja" not in video["snippet"]["description"]: continue
+                    if "#Shorts" in video["snippet"]["title"]: continue
+                    logger.info(video)
                     if video["id"]["videoId"] == lastVideo: break
                     # since video was not yet posted, add to posting queue
                     toPostVideos.append(video)
