@@ -42,6 +42,7 @@ class NinjaAntiSpam(commands.Cog):
 
         now = datetime.now().timestamp()
         uid = message.author.id
+        abuseInc = 0
 
         if not uid in self.h:
             # user is not currently in our message buffer, add them
@@ -61,24 +62,28 @@ class NinjaAntiSpam(commands.Cog):
             logger.debug(f"sift4 distance: {dist}")
             if dist <= 1:
                 # messages are too close
-                self.h[uid]["abuse"] += 1
-                logger.debug(f"user {self.h[uid]} increased abuse count")
-            if self.h[uid]["abuse"] >= 3: # it is spam
-                logger.debug("starting spam cleanup")
-                await self.cleanupMember(message.author)
-            else: # it is not spam (at least yet)
+                abuseInc = 1
+            if self.h[uid]["abuse"] < 3: # it is not spam (at least yet)
                 self.h[uid]["lmts"] = now
                 self.h[uid]["lm"] = msg
-        
-        # filter discord invite links no matter what the spam score is
-        if re.findall(r"(https?://)?(www\.)?((discord\.(gg|io|me|li))|(discord(app)?\.com/invite))/\S{,20}", msg):
+
+        # filter discord invite links no matter what the sift4 distance is
+        if re.findall(r"(https?://)?(www\.)?((discord\.(gg|io|me|li|com))|(discord(app)?\.com/invite))/\S{,20}", msg):
             logger.info("Discord invite link found, deleting message")
-            self.h[uid]["abuse"] += 1 # still increase the abuse count
-            botmsg = await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
-            await sleep(1)
+            abuseInc = 1.5 # increase the abuse count (more then for a normal message)
+            self.h[uid]["msgs"].pop() # remove last saved message since we already delete them here
             not isinstance(message.channel, DMChannel) and await message.delete()
-            await sleep(5)
+
+            botmsg = await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
+            await sleep(2)
             not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
+
+        self.h[uid]["abuse"] += abuseInc
+        if abuseInc > 0: 
+            logger.debug(f"user {self.h[uid]} increased abuse count")
+        if self.h[uid]["abuse"] >= 3: # too much spam
+            logger.info("starting spam cleanup")
+            await self.cleanupMember(message.author)
 
     # function to (kick a member and) cleanup their messages
     async def cleanupMember(self, author, kick=True) -> None:
@@ -97,7 +102,13 @@ class NinjaAntiSpam(commands.Cog):
                 if author.id in self.h:
                     userData = self.h[author.id].copy()
                     del self.h[author.id]
-                    await self.deleteOldMessages(userData["msgs"], botlogCh)
+                    if userData["msgs"]:
+                        await self.deleteOldMessages(userData["msgs"], botlogCh)
+                    elif userData["lm"]:
+                        # if we don't have message history (aka there is nothing to cleanup), only post the last message we saved
+                        await self.sendReport(botlogCh, userData["lm"])
+                    else:
+                        await self.sendReport(botlogCh, "No History available")
                     logger.debug(userData)
                     await sleep(2)
                 else:
@@ -105,7 +116,7 @@ class NinjaAntiSpam(commands.Cog):
             except Exception as E:
                 logger.exception(E)
                 break
-        logger.debug("done doing spam cleanup stuff")
+        logger.debug("cleanupMember() done")
 
     async def deleteOldMessages(self, msgs, botlogCh) -> None:
         blMsg = ""
