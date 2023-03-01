@@ -54,8 +54,6 @@ class NinjaAntiSpam(commands.Cog):
             logger.debug(f"built new user object {self.h[uid]}")
         else:
             # user has posted their 2nd+ message
-            self.h[uid]["msgs"].append([message.id, message.channel.id])
-
             # calculate message distance using sift4
             dist = self.s.distance(self.h[uid]["lm"], msg)
             logger.debug(f"sift4 distance: {dist}")
@@ -71,7 +69,7 @@ class NinjaAntiSpam(commands.Cog):
                 self.h[uid]["lm"] = msg
         
         # filter discord invite links no matter what the spam score is
-        if re.findall(r"(https?://)?(www\.)?((discord\.(gg|io|me|li))|(discord(app)?\.com/invite))/\S{,20}", msg):
+        if re.findall(r"(https?://)?(www\.)?((discord\.(gg|io|me|li|com))|(discord(app)?\.com/invite))/\S{,20}", msg):
             logger.info("Discord invite link found, deleting message")
             self.h[uid]["abuse"] += 1 # still increase the abuse count
             botmsg = await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
@@ -79,6 +77,9 @@ class NinjaAntiSpam(commands.Cog):
             not isinstance(message.channel, DMChannel) and await message.delete()
             await sleep(5)
             not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
+        else:
+            # since messages were not deleted keep the reference for later in case we want to delete them
+            self.h[uid]["msgs"].append([message.id, message.channel.id])
 
     # function to (kick a member and) cleanup their messages
     async def cleanupMember(self, author, kick=True) -> None:
