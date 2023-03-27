@@ -69,7 +69,10 @@ class NinjaReddit(commands.Cog):
         e.color = Colour.orange()
         if not s.is_self and "https://i.redd.it" in s.url:
             e.set_thumbnail(url=s.url)
-        e.add_field(name=s.author.name[:256], value=self._formatSubmissionText(s))
+        author = "[deleted]"
+        if s.author:
+            author = s.author.name[:256]
+        e.add_field(name=author, value=self._formatSubmissionText(s))
         return e
 
     def _formatSubmissionText(self, s) -> str:
