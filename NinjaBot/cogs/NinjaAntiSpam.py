@@ -80,7 +80,7 @@ class NinjaAntiSpam(commands.Cog):
 
         self.h[uid]["abuse"] += abuseInc
         if abuseInc > 0: 
-            logger.debug(f"user {self.h[uid]} increased abuse count")
+            logger.debug(f"user {self.h[uid]} increased abuse count by {abuseInc} to {self.h[uid]['abuse']}")
         if self.h[uid]["abuse"] >= 3: # too much spam
             logger.info("starting spam cleanup")
             await self.cleanupMember(message.author)
