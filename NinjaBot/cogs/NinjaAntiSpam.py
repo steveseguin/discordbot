@@ -74,7 +74,7 @@ class NinjaAntiSpam(commands.Cog):
             self.h[uid]["msgs"].pop() # remove last saved message since we already delete them here
             not isinstance(message.channel, DMChannel) and await message.delete()
 
-            botmsg = await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
+            botmsg = await message.channel.send(f"Hey there {message.author.mention}, any discord (invite) links are not allowed here! Repeated posts may lead to moderation actions!")
             await sleep(2)
             not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
 
