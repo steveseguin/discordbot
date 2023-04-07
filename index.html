@@ -90,7 +90,9 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			var ele = document.createElement("div");
 			ele.className = "entry";
 			//console.log(i);
-			//var message = i[Object.keys(i)[0]];
+
+			// ignore attachment-only messages for now until we can show pictures on the page
+			if (!message.content) return;
 
 			var avatar = document.createElement("img");
 			avatar.src =  message.avatar;

@@ -74,13 +74,13 @@ class NinjaAntiSpam(commands.Cog):
             self.h[uid]["msgs"].pop() # remove last saved message since we already delete them here
             not isinstance(message.channel, DMChannel) and await message.delete()
 
-            botmsg = await message.channel.send(f"Hey there {message.author.mention}, discord invite links are not allowed here!")
+            botmsg = await message.channel.send(f"Hey there {message.author.mention}, any discord (invite) links are not allowed here! Repeated posts may lead to moderation actions!")
             await sleep(2)
             not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
 
         self.h[uid]["abuse"] += abuseInc
         if abuseInc > 0: 
-            logger.debug(f"user {self.h[uid]} increased abuse count")
+            logger.debug(f"user {self.h[uid]} increased abuse count by {abuseInc} to {self.h[uid]['abuse']}")
         if self.h[uid]["abuse"] >= 3: # too much spam
             logger.info("starting spam cleanup")
             await self.cleanupMember(message.author)
