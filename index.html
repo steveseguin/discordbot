@@ -149,6 +149,9 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 						var img = document.createElement("img");
 						img.src = attachment.url;
 						img.className = "attachment";
+						img.onclick = function(){
+							 window.open(this.src, '_blank').focus();
+						}
 						attachments.appendChild(img);
 					}
 				});
