@@ -121,7 +121,7 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			var content = document.createElement("div");
 
 			// do some basic formatting replacements
-			msgCnt = message.content;
+			var msgCnt = message.content;
 			msgCnt = msgCnt.replaceAll(/<#\d+>/ig, ""); // Discord channel id's
 			msgCnt = msgCnt.replaceAll(/<@\d+>/ig, ""); // Discord user id's
 			msgCnt = msgCnt.replaceAll(/`/ig, ""); // backticks
@@ -129,9 +129,23 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 
 			content.innerText =  msgCnt;
 			content.className = "content";
-			
-			
 			ele.appendChild(content);
+			
+			if (message.attachments && message.attachments.length){
+				var attachments = document.createElement("div");
+				attachments.className = "attachments";
+				ele.appendChild(attachments);
+				message.attachments.forEach(attachment=>{
+					if (attachment.url){
+						var img = document.createElement("img");
+						img.src = attachment.url;
+						img.className = "attachment";
+						attachments.appendChild(img);
+					}
+				});
+			}
+
+
 			document.getElementById("main").appendChild(ele);
 			
 		});
