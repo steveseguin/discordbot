@@ -50,6 +50,7 @@ div:empty {
 img.attachment {
 	max-width: 300px;
 	max-height: 300px;
+	cursor:pointer;
 }
 .attachments {
 	border: 10px solid #0001;
@@ -151,6 +152,9 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 						img.className = "attachment";
 						img.onclick = function(){
 							 window.open(this.src, '_blank').focus();
+						}
+						if (attachment.desc){
+							img.title = attachment.desc;
 						}
 						attachments.appendChild(img);
 					}
