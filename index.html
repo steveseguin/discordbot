@@ -105,9 +105,6 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			ele.className = "entry";
 			//console.log(i);
 
-			// ignore attachment-only messages for now until we can show pictures on the page
-			if (!message.content) return;
-
 			var avatar = document.createElement("img");
 			avatar.src =  message.avatar;
 			avatar.className = "avatar";	
@@ -139,7 +136,7 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			msgCnt = msgCnt.replaceAll(/<#\d+>/ig, ""); // Discord channel id's
 			msgCnt = msgCnt.replaceAll(/<@\d+>/ig, ""); // Discord user id's
 			msgCnt = msgCnt.replaceAll(/`/ig, ""); // backticks
-			msgCnt = msgCnt.replaceAll(/&[a-zA-Z0-9=]+/ig, "'$&'"); // add '' to all parameters
+			msgCnt = msgCnt.replaceAll(/\s(&[a-zA-Z0-9=]+)/ig, " '$1'"); // add '' to all parameters
 
 			content.innerText =  msgCnt;
 			content.className = "content";
