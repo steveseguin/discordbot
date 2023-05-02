@@ -105,24 +105,22 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			ele.className = "entry";
 			//console.log(i);
 
-			// ignore attachment-only messages for now until we can show pictures on the page
-			if (!message.content) return;
-
+			// Author Avatar Image
 			var avatar = document.createElement("img");
 			avatar.src =  message.avatar;
 			avatar.className = "avatar";	
-			avatar.onerror = function(){
+			avatar.onerror = function() {
 				this.style.opacity="0";
 			};		
 			ele.appendChild(avatar);
 
+			// Author Display Name
 			var name = document.createElement("div");
 			name.innerText =  message.name;
 			name.className = "name";			
 			ele.appendChild(name);
 
-
-
+			// Timestamp
 			var formattedTime = "";
 			if (message.timestamp) {
 				formattedTime = timeSince(parseInt(message.timestamp)*1000);
@@ -131,40 +129,41 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 				time.innerText = formattedTime +  " ago";
 				ele.appendChild(time);
 			}
-			
+
 			var content = document.createElement("div");
 
+			// Text message
 			// do some basic formatting replacements
 			var msgCnt = message.content;
 			msgCnt = msgCnt.replaceAll(/<#\d+>/ig, ""); // Discord channel id's
 			msgCnt = msgCnt.replaceAll(/<@\d+>/ig, ""); // Discord user id's
 			msgCnt = msgCnt.replaceAll(/`/ig, ""); // backticks
-			msgCnt = msgCnt.replaceAll(/&[a-zA-Z0-9=]+/ig, "'$&'"); // add '' to all parameters
+			msgCnt = msgCnt.replaceAll(/\s(&[a-zA-Z0-9=]+)/ig, " '$1'"); // add '' to all parameters
 
 			content.innerText =  msgCnt;
 			content.className = "content";
 			ele.appendChild(content);
-			
-			if (message.attachments && message.attachments.length){
+
+			// (Image) Attachments
+			if (message.attachments && message.attachments.length) {
 				var attachments = document.createElement("div");
 				attachments.className = "attachments";
 				ele.appendChild(attachments);
-				message.attachments.forEach(attachment=>{
-					if (attachment.url){
+				message.attachments.forEach(attachment => {
+					if (attachment.url) {
 						var img = document.createElement("img");
 						img.src = attachment.url;
 						img.className = "attachment";
-						img.onclick = function(){
+						img.onclick = function() {
 							 window.open(this.src, '_blank').focus();
 						}
-						if (attachment.desc){
+						if (attachment.desc) {
 							img.title = attachment.desc;
 						}
 						attachments.appendChild(img);
 					}
 				});
 			}
-
 
 			document.getElementById("main").appendChild(ele);
 			

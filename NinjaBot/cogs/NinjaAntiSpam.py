@@ -68,14 +68,14 @@ class NinjaAntiSpam(commands.Cog):
                 self.h[uid]["lm"] = msg
 
         # filter discord invite links no matter what the sift4 distance is
-        if re.findall(r"(https?://)?(www\.)?((discord\.(gg|io|me|li|com))|(discord(app)?\.com/invite))/\S{,20}", msg):
+        if len(re.findall(r"(?:https?://)?(www\.)?(?:discord(?:app)?\.(?:gg|io|me|li|com))/(?!channels/)\S{,20}", msg)):
             logger.info("Discord invite link found, deleting message")
             abuseInc = 1.5 # increase the abuse count (more then for a normal message)
             self.h[uid]["msgs"].pop() # remove last saved message since we already delete them here
             not isinstance(message.channel, DMChannel) and await message.delete()
 
             botmsg = await message.channel.send(f"Hey there {message.author.mention}, any discord (invite) links are not allowed here! Repeated posts may lead to moderation actions!")
-            await sleep(2)
+            await sleep(4)
             not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
 
         self.h[uid]["abuse"] += abuseInc
