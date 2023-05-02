@@ -71,7 +71,7 @@ class NinjaUpdates(commands.Cog):
                 # order gistContent by timestamp
                 gistContent = sorted(gistContent, key=lambda k: k["timestamp"])
                 # only keep the last 60 entrys in list
-                gistContent = gistContent[-60:]
+                gistContent = gistContent[-70:]
 
                 # create data structure for github api
                 patchData = {
