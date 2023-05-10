@@ -79,6 +79,17 @@ class NinjaThreadManager(commands.Cog):
                     user = await self.bot.fetch_user(staff)
                 await createdThread.add_user(user)
 
+            # lens LLM search
+            # check if current channel has it enabled
+            if ctx.message.content and str(ctx.channel.id) in self.bot.config.get("lensEnabledChannels"):
+                NinjaDocs = self.bot.get_cog("NinjaDocs")
+                lensAnswer = await NinjaDocs.getLensAnswer(ctx.message.content)
+                if lensAnswer:
+                    lensEmbed = embedBuilder.ninjaEmbed(description=NinjaDocs.createEmbedTextFromSearchResult(lensAnswer))
+                    await createdThread.send("While you wait, here is what NinjaBot thinks might help you with \
+                                             your question. If it satisfies your request, click the \"Close Thread\" \
+                                             button above or use the /ask command to ask further specific questions.", embed=lensEmbed)
+
     @app_commands.command(description="Change the thread title")
     @app_commands.describe(new_title="The new thread title")
     @app_commands.guild_only()
