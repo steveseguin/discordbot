@@ -5,10 +5,8 @@ import asyncio
 import json
 import aiohttp
 import discord
-from discord.ext import commands, tasks
-from discord import Colour
 from discord import app_commands
-from asyncio import sleep
+from discord.ext import commands
 from typing import Union
 
 logger = logging.getLogger("NinjaBot." + __name__)
@@ -26,7 +24,6 @@ class NinjaDocs(commands.Cog):
             }
 
     def _checkIfInATEC(interaction: discord.Interaction) -> bool:
-        logger.debug(interaction.client.config.get("autoThreadEnabledChannels"))
         return str(interaction.channel_id) not in interaction.client.config.get("autoThreadEnabledChannels")
 
     # app command for manually asking questions to gitbook lens
@@ -86,8 +83,7 @@ class NinjaDocs(commands.Cog):
         message = re.sub(regex, "", message, 0, re.IGNORECASE)
 
         # questions need to be at least 3 words long
-        if not re.match(r"(?:\w+\??\s?){3,}", message): return None
-
+        if not re.match(r"(?:\w+\s+){3,}", message): return None
         logger.debug(message)
 
         # query lens
