@@ -82,8 +82,8 @@ class NinjaDocs(commands.Cog):
         regex = r"((hello)|(hey)|(help)|(steve)|(hi)|(everyone)|(thanks))\b,?!?\s?"
         message = re.sub(regex, "", message, 0, re.IGNORECASE)
 
-        # questions need to be at least 2 words long
-        if not re.match(r"(?:\w+\s+){2,}", message): return None
+        # questions need to be at least 15 characters long
+        if not len(message) > 15: return None
         logger.debug(f"Question: {message}")
 
         # query lens
