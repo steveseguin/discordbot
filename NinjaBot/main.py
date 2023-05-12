@@ -40,6 +40,7 @@ dcL.addHandler(streamHnd)
 logging.getLogger("discord.http").setLevel(logging.INFO)
 logging.getLogger("discord.gateway").setLevel(logging.INFO)
 logging.getLogger("discord.client").setLevel(logging.INFO)
+logging.getLogger("discord.webhook").setLevel(logging.INFO)
 
 # NinjaBot logger
 nbL = logging.getLogger("NinjaBot")
