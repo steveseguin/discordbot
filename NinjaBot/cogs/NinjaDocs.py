@@ -84,7 +84,7 @@ class NinjaDocs(commands.Cog):
 
         # questions need to be at least 3 words long
         if not re.match(r"(?:\w+\s+){3,}", message): return None
-        logger.debug(message)
+        logger.debug(f"Question: {message}")
 
         # query lens
         answer = {}
@@ -144,7 +144,9 @@ class NinjaDocs(commands.Cog):
         try:
             async with self.http.post(self.gbBaseUrl + endpoint, json=data, headers=self.gbHeaders) as resp:
                 apiResponse = await resp.json(content_type="application/json")
-                logger.debug(resp.headers)
+                logger.info(f"'X-Ratelimit-Limit': '{resp.headers.get('X-Ratelimit-Limit')}', "\
+                            f"'X-Ratelimit-Remaining': '{resp.headers.get('X-Ratelimit-Remaining')}', "\
+                            f"'X-Ratelimit-Reset': '{resp.headers.get('X-Ratelimit-Reset')}'")
                 if resp.status == 200: return apiResponse
                 return None
         except Exception as E:
