@@ -163,16 +163,19 @@ class NinjaBot(commands.Bot):
         elif isinstance(err, discord.ext.commands.NoPrivateMessage):
             logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
         else:
-            logger.error(err)
-            raise err
+            logger.exception(err)
     
     async def on_app_command_error(self, interaction: discord.Interaction, err) -> None:
-        logger.debug(err)
-        if isinstance(err, discord.app_commands.CheckFailure):
+        logger.exception(err)
+        if isinstance(err, discord.app_commands.CommandOnCooldown):
+            await interaction.response.send_message(str(err), ephemeral=True)
+        elif isinstance(err, discord.app_commands.CheckFailure):
             # log check failures
             logger.info(f"user '{interaction.user.display_name}' tried to run '{interaction.command.qualified_name}' but '{err}'")
             # inform user of their poor choice
             await interaction.response.send_message("You cannot run this command here", ephemeral=True)
+        else:
+            logger.exception(err)
 
 async def main() -> None:
     logger.info("Starting up NinjaBot V2.1")

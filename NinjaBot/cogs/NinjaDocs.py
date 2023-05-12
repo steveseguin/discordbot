@@ -30,7 +30,7 @@ class NinjaDocs(commands.Cog):
     @app_commands.command()
     @app_commands.describe(question="The question you want to ask")
     @app_commands.guild_only()
-    @app_commands.checks.cooldown(1, 5.0, key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, 10.0, key=lambda i: (i.guild_id, i.user.id))
     @app_commands.check(_checkIfInATEC)
     async def ask(self, interaction: discord.Interaction, question: str) -> None:
         """Ask ninjabot a question"""
