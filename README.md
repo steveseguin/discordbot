@@ -21,6 +21,10 @@ Reddit API: You also have to create an app on reddit and paste the client id and
 
 Youtube API: You have to create an app in the google api console, then enable the "YouTube Data API v3" and create a new API key. ("youtubeApiKey" in the discordbot.cfg)
 
+Gitbook API: You have to create an api token in the personal settings -> developer settings.
+
+Github API: You have to create an api token in settings -> Developer settings -> personal access token -> tokens (classic).
+
 Advanced users should setup the script as a system service, so it auto restarts as needed or run everything inside a docker container.
 
 ### Notes

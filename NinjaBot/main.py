@@ -40,6 +40,7 @@ dcL.addHandler(streamHnd)
 logging.getLogger("discord.http").setLevel(logging.INFO)
 logging.getLogger("discord.gateway").setLevel(logging.INFO)
 logging.getLogger("discord.client").setLevel(logging.INFO)
+logging.getLogger("discord.webhook").setLevel(logging.INFO)
 
 # NinjaBot logger
 nbL = logging.getLogger("NinjaBot")
@@ -99,14 +100,15 @@ class NinjaBot(commands.Bot):
         await self.load_extension("cogs.NinjaUpdates")
         # auto-thread manager
         await self.load_extension("cogs.NinjaThreadManager")
-
-        # docs search tool (currently broken, TODO)
-        #await self.load_extension("cogs.NinjaDocs")
+        # docs help tool
+        await self.load_extension("cogs.NinjaDocs")
 
         # takes care of pushing all application commands to discord
         guild = int(self.config.get("guild"))
         self.tree.copy_global_to(guild=discord.Object(id=guild))
         await self.tree.sync(guild=discord.Object(id=guild))
+        # attach error handler to tree to handle app command errors
+        self.tree.on_error = self.on_app_command_error
 
         # for funsies
         await self.change_presence(status=discord.Status.online, activity=discord.Game("helping hand"))
@@ -161,11 +163,22 @@ class NinjaBot(commands.Bot):
         elif isinstance(err, discord.ext.commands.NoPrivateMessage):
             logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
         else:
-            logger.error(err)
-            raise err
+            logger.exception(err)
+    
+    async def on_app_command_error(self, interaction: discord.Interaction, err) -> None:
+        logger.exception(err)
+        if isinstance(err, discord.app_commands.CommandOnCooldown):
+            await interaction.response.send_message(str(err), ephemeral=True)
+        elif isinstance(err, discord.app_commands.CheckFailure):
+            # log check failures
+            logger.info(f"user '{interaction.user.display_name}' tried to run '{interaction.command.qualified_name}' but '{err}'")
+            # inform user of their poor choice
+            await interaction.response.send_message("You cannot run this command here", ephemeral=True)
+        else:
+            logger.exception(err)
 
 async def main() -> None:
-    logger.info("Starting up NinjaBot V2")
+    logger.info("Starting up NinjaBot V2.1")
     try:
         await config.parse()
     except Exception as E:
@@ -214,9 +227,10 @@ general TODO list:
 - (DONE) Add youtube integration for steve's channel
 - (DONE) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
 - (DONE) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
-- (Bonus) Improvement: convert discord formatting into html for update page (include images and user avatar)
-- (Bonus) get docs search working again and line it up with other cogs
+- (DONE) get docs search working again and line it up with other cogs
+- (Bonus) (NinjaUpdates) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) Improvement: add register and unregister method to main bot class (save first part of command and callback?)
 - (Bonus) Improvement: use cog_unload to run unregister and update to update (check if valid)
-- (Bonus) Improvement: improve spam detection by factoring in message posting speed?
+- (Bonus) (NinjaAntiSpam) Improvement: improve spam detection by factoring in message posting speed?
+- (Bonus) (NinjaDocs) Improvement: Cache resolved docs urls
 """

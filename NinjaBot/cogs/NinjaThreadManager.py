@@ -21,20 +21,27 @@ class ThreadTitleChangeModal(discord.ui.Modal, title="Rename Thread"):
 
 # The buttons shown below the welcome message
 class ThreadManagementButtons(discord.ui.View):
-    def __init__(self, NinjaThreadManager) -> None:
+    def __init__(self, NinjaThreadManager, threadCreationUser) -> None:
         super().__init__(timeout=None)
         self.ntm = NinjaThreadManager
+        self.threadCreationUser = threadCreationUser
 
-    @discord.ui.button(label="Close Thread", style=discord.ButtonStyle.success)
+    @discord.ui.button(label="Close Thread", style=discord.ButtonStyle.success, custom_id="close")
     async def closeButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self.ntm._close(interaction)
 
-    @discord.ui.button(label="Change Title", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="Change Title", style=discord.ButtonStyle.primary, custom_id="title")
     async def titleButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(ThreadTitleChangeModal(self.ntm, interaction.channel.name))
 
     # Check if user is Moderator before calling callbacks
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        # allow a user to close their own thread
+        if hasattr(interaction, "user") and interaction.user.id == self.threadCreationUser \
+            and hasattr(interaction, "data") and "custom_id" in interaction.data \
+            and interaction.data.get("custom_id") == "close":
+            return True
+        # allow moderators to do everything everywhere
         if hasattr(interaction, "message") and hasattr(interaction.user, "roles") and discord.utils.get(interaction.user.roles, name="Moderator"):
             return True
         await interaction.response.send_message("Sorry, only staff can use this button", ephemeral=True)
@@ -65,7 +72,7 @@ class NinjaThreadManager(commands.Cog):
                 welcomeText = welcomeText.format(usermention=ctx.message.author.mention)
                 embed = embedBuilder.ninjaEmbed(description=welcomeText)
                 # Post welcome message to thread
-                await createdThread.send(embed=embed, view=ThreadManagementButtons(self))
+                await createdThread.send(embed=embed, view=ThreadManagementButtons(self, ctx.message.author.id))
             except:
                 # No welcome message
                 pass
@@ -78,6 +85,17 @@ class NinjaThreadManager(commands.Cog):
                 if not user:
                     user = await self.bot.fetch_user(staff)
                 await createdThread.add_user(user)
+
+            # lens LLM search
+            # check if current channel has it enabled
+            if ctx.message.content and str(ctx.channel.id) in self.bot.config.get("lensEnabledChannels"):
+                NinjaDocs = self.bot.get_cog("NinjaDocs")
+                lensAnswer = await NinjaDocs.getLensAnswer(ctx.message.content)
+                if lensAnswer and not lensAnswer["text"].startswith("I don't know."):
+                    lensEmbed = embedBuilder.ninjaEmbed(description=NinjaDocs.createEmbedTextFromLensResult(lensAnswer))
+                    await createdThread.send("While you wait, here is what NinjaBot thinks might help you with " \
+                                             "your question. If it satisfies your request, click the \"Close Thread\" " \
+                                             "button above or use the /ask command to ask further specific questions.", embed=lensEmbed)
 
     @app_commands.command(description="Change the thread title")
     @app_commands.describe(new_title="The new thread title")
