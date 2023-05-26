@@ -188,7 +188,7 @@ class NinjaThreadManager(commands.Cog):
 
     # get the first 10 words of a message or 30 chars
     def _getThreadTitle(self, message) -> None:
-        match = re.match(r"^(?:\w+\s){1,10}", message)
+        match = re.match(r"^(?:\w+\W+){1,10}", message)
         if match:
             return match.group(0)
         return message[:30]
