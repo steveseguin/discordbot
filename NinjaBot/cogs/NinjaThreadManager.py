@@ -26,11 +26,11 @@ class ThreadManagementButtons(discord.ui.View):
         self.ntm = NinjaThreadManager
         self.threadCreationUser = threadCreationUser
 
-    @discord.ui.button(label="Close Thread", style=discord.ButtonStyle.success, custom_id="close")
+    @discord.ui.button(label="Close Thread", style=discord.ButtonStyle.success, custom_id="close", emoji="✅")
     async def closeButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self.ntm._close(interaction)
 
-    @discord.ui.button(label="Change Title", style=discord.ButtonStyle.primary, custom_id="title")
+    @discord.ui.button(label="Change Title", style=discord.ButtonStyle.primary, custom_id="title", emoji="📑")
     async def titleButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(ThreadTitleChangeModal(self.ntm, interaction.channel.name))
 
@@ -54,11 +54,11 @@ class LensReplyButtons(discord.ui.View):
         self.ntm = NinjaThreadManager
         self.threadCreationUser = threadCreationUser
 
-    @discord.ui.button(label="This answered my question", style=discord.ButtonStyle.success)
+    @discord.ui.button(label="This answered my question", style=discord.ButtonStyle.success, emoji="✅")
     async def closeButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self.ntm._close(interaction)
 
-    @discord.ui.button(label="This does NOT answer my question", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="This does NOT answer my question", style=discord.ButtonStyle.primary, emoji="❌")
     async def titleButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_message("Thanks for the feedback. Please be patient while you wait for someone to answer." \
                                                 "\nFeel free to use any above mentioned methods to search for an answer " \
