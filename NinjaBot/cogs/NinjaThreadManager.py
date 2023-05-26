@@ -47,6 +47,34 @@ class ThreadManagementButtons(discord.ui.View):
         await interaction.response.send_message("Sorry, only staff can use this button", ephemeral=True)
         return False
 
+# The buttons shown below the automated gitbook lens message
+class LensReplyButtons(discord.ui.View):
+    def __init__(self, NinjaThreadManager, threadCreationUser) -> None:
+        super().__init__(timeout=None)
+        self.ntm = NinjaThreadManager
+        self.threadCreationUser = threadCreationUser
+
+    @discord.ui.button(label="This answered my question", style=discord.ButtonStyle.success)
+    async def closeButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self.ntm._close(interaction)
+
+    @discord.ui.button(label="This does NOT answer my question", style=discord.ButtonStyle.primary)
+    async def titleButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await interaction.response.send_message("Thanks for the feedback. Please be patient while you wait for someone to answer." \
+                                                "\nFeel free to use any above mentioned methods to search for an answer " \
+                                                "yourself and close the thread if you do find it.", ephemeral=True)
+
+    # Check user permissions before calling callbacks
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        # allow the thread creation user to do everything
+        if hasattr(interaction, "user") and interaction.user.id == self.threadCreationUser:
+            return True
+        # allow moderators to do everything
+        if hasattr(interaction, "message") and hasattr(interaction.user, "roles") and discord.utils.get(interaction.user.roles, name="Moderator"):
+            return True
+        await interaction.response.send_message("Sorry, you can't use this button", ephemeral=True)
+        return False
+
 class NinjaThreadManager(commands.Cog):
     def __init__(self, bot) -> None:
         logger.debug(f"Loading {self.__class__.__name__}")
@@ -94,8 +122,9 @@ class NinjaThreadManager(commands.Cog):
                 if lensAnswer and not lensAnswer["text"].startswith("I don't know."):
                     lensEmbed = embedBuilder.ninjaEmbed(description=NinjaDocs.createEmbedTextFromLensResult(lensAnswer))
                     await createdThread.send("While you wait, here is what NinjaBot thinks might help you with " \
-                                             "your question. If it satisfies your request, click the \"Close Thread\" " \
-                                             "button above or use the /ask command to ask further specific questions.", embed=lensEmbed)
+                                             "your question. If it satisfies your request, click the \"This answered my question\" " \
+                                             "button above or use the /ask command to ask further specific questions.",
+                                             embed=lensEmbed, view=LensReplyButtons(self, ctx.message.author.id))
 
     @app_commands.command(description="Change the thread title")
     @app_commands.describe(new_title="The new thread title")
