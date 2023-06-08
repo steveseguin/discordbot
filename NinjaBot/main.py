@@ -228,6 +228,7 @@ general TODO list:
 - (DONE) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
 - (DONE) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
 - (DONE) get docs search working again and line it up with other cogs
+- (DONE) Refactor youtube and reddit modules to save post id's to config
 - (Bonus) (NinjaUpdates) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) Improvement: add register and unregister method to main bot class (save first part of command and callback?)
 - (Bonus) Improvement: use cog_unload to run unregister and update to update (check if valid)

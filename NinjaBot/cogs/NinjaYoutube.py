@@ -1,5 +1,4 @@
 import logging
-import json
 import googleapiclient.discovery
 from discord.ext import commands, tasks
 from asyncio import sleep
@@ -33,7 +32,7 @@ class NinjaYoutube(commands.Cog):
                 postedVideos = self.bot.config.get("youtubePostedVideo") or []
                 toPostVideos = []
                 logger.debug(f"Posted videos so far: '{postedVideos}'")
-                logger.debug(json.dumps(response["items"], indent=4))
+                logger.debug(response["items"])
                 for video in response["items"]:
                     if video["kind"] != "youtube#searchResult" and video["id"]["kind"] != "youtube#video": continue
                     if video["id"]["videoId"] in postedVideos: continue
