@@ -1,4 +1,5 @@
 import logging
+import json
 import googleapiclient.discovery
 from discord.ext import commands, tasks
 from asyncio import sleep
@@ -21,7 +22,7 @@ class NinjaYoutube(commands.Cog):
             request = self.youtube.search().list(
                 part="id,snippet",
                 channelId=self.bot.config.get("youtubeChannelId"),
-                maxResults=5,
+                maxResults=6,
                 order="date",
                 safeSearch="none",
                 type="video"
@@ -29,19 +30,19 @@ class NinjaYoutube(commands.Cog):
             response = request.execute()
 
             if response and response["kind"] == "youtube#searchListResponse" and "items" in response and response["items"]:
-                lastVideo = self.bot.config.get("youtubeLastVideo") or ""
-                logger.debug(f"Current lastVideo is: '{lastVideo}'")
+                postedVideos = self.bot.config.get("youtubePostedVideo") or []
                 toPostVideos = []
-                logger.debug(response["items"])
+                logger.debug(f"Posted videos so far: '{postedVideos}'")
+                logger.debug(json.dumps(response["items"], indent=4))
                 for video in response["items"]:
                     if video["kind"] != "youtube#searchResult" and video["id"]["kind"] != "youtube#video": continue
+                    if video["id"]["videoId"] in postedVideos: continue
                     if not video["snippet"]["description"]: continue
                     if not video["snippet"]["title"]: continue
                     #if "#VDO.Ninja" not in video["snippet"]["description"]: continue
-                    if "#Shorts" in video["snippet"]["title"]: continue
+                    if "#Shorts" in video["snippet"]["title"]: continue                   
+                    # since video was not yet posted(otherwise we would not reach here), add to posting queue
                     logger.info(video)
-                    if video["id"]["videoId"] == lastVideo: break
-                    # since video was not yet posted, add to posting queue
                     toPostVideos.append(video)
         except Exception as E:
             logger.debug("Error while polling youtube videos")
@@ -52,26 +53,25 @@ class NinjaYoutube(commands.Cog):
                 toPostVideos.reverse()
             else:
                 return
-            
+
             # post all open videos
             logger.debug(toPostVideos)
-            newLastSubmission = lastVideo
             try:
                 youtubeChannel = self.bot.get_channel(int(self.bot.config.get("youtubeDiscordChannel")))
                 for video in toPostVideos:
                     await youtubeChannel.send(f"New video by Steve! Check it out: https://www.youtube.com/watch?v={video['id']['videoId']}")
-                    newLastSubmission = video["id"]["videoId"]
+                    postedVideos.append(video["id"]["videoId"])
                     await sleep(2) # do some reate limiting ourselfs
             except Exception as E:
                 logger.exception(E)
             finally:
-                # update id of last video to what was the sucessfully sent last
-                await self.bot.config.set("youtubeLastVideo", newLastSubmission)
+                # update list of video id's we already posted so far
+                await self.bot.config.set("youtubePostedVideo", postedVideos)
 
     @youtubeChecker.before_loop
     async def before_youtubeChecker(self) -> None:
         await self.bot.wait_until_ready()
-    
+
     async def getCommands(self) -> list:
         """Return the available commands as a list"""
         """This cog doesn't have commands"""
