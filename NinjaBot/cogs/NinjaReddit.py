@@ -24,15 +24,13 @@ class NinjaReddit(commands.Cog):
     async def redditChecker(self) -> None:
         logger.debug("Running reddit checker")
         try:
-            lastSubmission = self.bot.config.get("redditLastSubmission") or ""
-            logger.debug(f"Current last submission is: '{lastSubmission}'")
+            postedSubmissions = self.bot.config.get("redditPostedSubmissions") or []
+            logger.debug(f"Posted submissions so far: '{postedSubmissions}'")
             toPostSubmissions = []
             # get subreddit and submissions
             ninjaSubreddit = await self.Reddit.subreddit("VDONinja")
-            async for submission in ninjaSubreddit.new(limit=5):
-                # check if the post we are looking at is the last one that we know was posted
-                if submission.id == lastSubmission:
-                    break
+            async for submission in ninjaSubreddit.new(limit=10):
+                if submission.id in postedSubmissions: continue
                 # since post was not yet posted, add to posting queue
                 toPostSubmissions.append(submission)
         except Exception as E:
@@ -48,18 +46,17 @@ class NinjaReddit(commands.Cog):
 
             # post all open submissions
             logger.debug(toPostSubmissions)
-            newLastSubmission = lastSubmission
             try:
                 redditChannel = self.bot.get_channel(int(self.bot.config.get("redditChannel")))
                 for submission in toPostSubmissions:
                     await redditChannel.send(embed=self._formatSubmission(submission))
-                    newLastSubmission = submission.id
+                    postedSubmissions.append(submission.id)
                     await sleep(2) # do some reate limiting ourselfs
             except Exception as E:
                 logger.exception(E)
             finally:
                 # update id of last post to what was the sucessfully sent last
-                await self.bot.config.set("redditLastSubmission", newLastSubmission)
+                await self.bot.config.set("redditPostedSubmissions", postedSubmissions)
 
     def _formatSubmission(self, s) -> embedBuilder.ninjaEmbed:
         e = embedBuilder.ninjaEmbed()
