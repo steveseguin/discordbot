@@ -107,7 +107,7 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 
 			// Author Avatar Image
 			var avatar = document.createElement("img");
-			avatar.src =  message.avatar;
+			avatar.src =  "https://imgcache.vdo.ninja/updates/?imgurl="+encodeURIComponent(message.avatar);
 			avatar.className = "avatar";	
 			avatar.onerror = function() {
 				this.style.opacity="0";
@@ -152,7 +152,7 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 				message.attachments.forEach(attachment => {
 					if (attachment.url) {
 						var img = document.createElement("img");
-						img.src = attachment.url;
+						img.src =  "https://imgcache.vdo.ninja/updates/?imgurl="+encodeURIComponent(attachment.url);
 						img.className = "attachment";
 						img.onclick = function() {
 							 window.open(this.src, '_blank').focus();
