@@ -78,6 +78,17 @@ class NinjaAntiSpam(commands.Cog):
             await sleep(4)
             not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
 
+        # find stream keys in messages and delete them for safetly
+        # right now we have youtube and twitch
+        if len(re.findall(r"(?:live_\d{8}_[a-zA-Z0-9]{32})|(?:[a-z0-9]{4}-){4}[a-z0-9]{4}", msg)):
+            logger.info("Streamkey was found in message, deleting for safety")
+            not isinstance(message.channel, DMChannel) and await message.delete()
+
+            botmsg = await message.channel.send(f"Hey there {message.author.mention}, there was a stream key found in your last message. "
+                                                "For your safety the message was deleted. You can post your message again without doxing yourself ;)")
+            await sleep(12)
+            not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
+
         self.h[uid]["abuse"] += abuseInc
         if abuseInc > 0: 
             logger.debug(f"user {self.h[uid]} increased abuse count by {abuseInc} to {self.h[uid]['abuse']}")
