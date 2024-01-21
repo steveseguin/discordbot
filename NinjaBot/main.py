@@ -178,7 +178,7 @@ class NinjaBot(commands.Bot):
             logger.exception(err)
 
 async def main() -> None:
-    logger.info("Starting up NinjaBot V2.1")
+    logger.info("Starting up NinjaBot V2.2")
     try:
         await config.parse()
     except Exception as E:

@@ -92,7 +92,7 @@ class NinjaThreadManager(commands.Cog):
             and str(ctx.channel.id) in self.bot.config.get("autoThreadEnabledChannels")):
 
             # Create thread
-            createdThread = await ctx.message.create_thread(name=self._getThreadTitle(ctx.message.content), auto_archive_duration=10080, reason=__name__)
+            createdThread = await ctx.message.create_thread(name=self._getThreadTitle(ctx.message), auto_archive_duration=10080, reason=__name__)
             # create embed from welcome message
             welcomeMapping = self.bot.config.get("autoThreadWelcomeMapping")
             try:
@@ -187,10 +187,13 @@ class NinjaThreadManager(commands.Cog):
         await ctx.send(error)
 
     # get the first 10 words of a message or 30 chars
-    def _getThreadTitle(self, message) -> None:
+    def _getThreadTitle(self, msg) -> None:
+        message = msg.content
         match = re.match(r"^(?:\w+\W+){1,10}", message)
         if match:
             return match.group(0)
+        if not message and msg.attachments:
+            return "Image"
         return message[:30]
 
     async def getCommands(self) -> list:
