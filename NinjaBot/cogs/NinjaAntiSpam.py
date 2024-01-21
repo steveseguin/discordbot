@@ -31,8 +31,8 @@ class NinjaAntiSpam(commands.Cog):
             or message.type == discord.MessageType.reply):
             # ignore messages by bots, moderators and system messages
             return
-        #logger.debug(message)
 
+        # use message text itself or the filename as the message
         if message.content:
             msg = message.content
         elif message.attachments:
@@ -52,7 +52,7 @@ class NinjaAntiSpam(commands.Cog):
             self.h[uid]["lmts"] = now
             self.h[uid]["abuse"] = 0
             self.h[uid]["msgs"] = [[message.id, message.channel.id]]
-            logger.debug(f"built new user object {self.h[uid]}")
+            logger.debug(f"built new user {str(uid)}/{str(message.author)} object {self.h[uid]}")
         else:
             # user has posted their 2nd+ message
             self.h[uid]["msgs"].append([message.id, message.channel.id])
@@ -60,7 +60,10 @@ class NinjaAntiSpam(commands.Cog):
             # calculate message distance using sift4
             dist = self.s.distance(self.h[uid]["lm"], msg)
             logger.debug(f"sift4 distance: {dist}")
-            if dist <= 1:
+            if dist == 0:
+                # messages are way too close
+                abuseInc = 1.5
+            elif dist == 1:
                 # messages are too close
                 abuseInc = 1
             if self.h[uid]["abuse"] < 3: # it is not spam (at least yet)
@@ -68,7 +71,7 @@ class NinjaAntiSpam(commands.Cog):
                 self.h[uid]["lm"] = msg
 
         # filter discord invite links no matter what the sift4 distance is
-        if len(re.findall(r"(?:https?://)?(www\.)?(?:discord(?:app)?\.(?:gg|io|me|li|com))/(?!channels/)\S{,20}", msg)):
+        if len(re.findall(r"(?:https?://)?(www\.)?(?:discord(?:app)?\.(?:gg|io|me|li|com))/(?!channels/)\S{,20}", message.content)):
             logger.info("Discord invite link found, deleting message")
             abuseInc = 1.5 # increase the abuse count (more then for a normal message)
             self.h[uid]["msgs"].pop() # remove last saved message since we already delete them here
@@ -80,7 +83,7 @@ class NinjaAntiSpam(commands.Cog):
 
         # find stream keys in messages and delete them for safetly
         # right now we have youtube and twitch
-        if len(re.findall(r"(?:live_\d{8}_[a-zA-Z0-9]{32})|(?:[a-z0-9]{4}-){4}[a-z0-9]{4}", msg)):
+        if len(re.findall(r"(?:live_\d{8}_[a-zA-Z0-9]{32})|(?:[a-z0-9]{4}-){4}[a-z0-9]{4}", message.content)):
             logger.info("Streamkey was found in message, deleting for safety")
             not isinstance(message.channel, DMChannel) and await message.delete()
 
@@ -135,7 +138,11 @@ class NinjaAntiSpam(commands.Cog):
             try:
                 spamChannel = self.bot.get_channel(chid)
                 msg = await spamChannel.fetch_message(mid)
-                line = f"{msg.channel.name}: {msg.content}"
+                # text message beats attachments
+                if msg.attachments:
+                    line = f"{msg.channel.name}: {msg.attachments[0].filename} <{msg.attachments[0].url}>"
+                if msg.content:
+                    line = f"{msg.channel.name}: {msg.content}"
                 logger.warn(line)
                 await msg.delete()
                 if len(blMsg) + len(line) > 4090:
@@ -153,13 +160,13 @@ class NinjaAntiSpam(commands.Cog):
     # use task to cleanup old user objects
     @tasks.loop(minutes=2)
     async def historyCleanupJob(self) -> None:
-        logger.debug("Running antispam cleanup job")
-        logger.debug(f"self.h before cleanup: {self.h}")
+        logger.debug("Running antispam history-cleanup job")
+        logger.debug(f"self.h before history-cleanup: {self.h}")
         now = datetime.now().timestamp()
         for uid, d in self.h.copy().items():
             if now - d["lmts"] > 60:
                 del self.h[uid]
-        logger.debug(f"self.h after cleanup: {self.h}")
+        logger.debug(f"self.h after history-cleanup: {self.h}")
 
     @historyCleanupJob.before_loop
     async def before_historyCleanupJob(self) -> None:
