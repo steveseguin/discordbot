@@ -79,7 +79,7 @@ class NinjaDocs(commands.Cog):
         if not message: return None
 
         # remove common phrases not needed for lens
-        regex = r"((hello)|(hey)|(help)|(steve)|(hi)|(everyone)|(thanks))\b,?!?\s?"
+        regex = r"((hello)|(hey)|(help)|(hi)|(everyone)|(thanks))\b,?!?\s?"
         message = re.sub(regex, "", message, 0, re.IGNORECASE)
 
         # questions need to be at least 15 characters long
