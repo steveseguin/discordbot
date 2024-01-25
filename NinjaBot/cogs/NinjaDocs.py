@@ -183,7 +183,7 @@ class NinjaDocs(commands.Cog):
     async def doGbPostApiRequest(self, endpoint: str, data: dict) -> Union[dict, None]:
         try:
             async with self.http.post(self.gbBaseUrl + endpoint, json=data, headers=self.gbHeaders) as resp:
-                apiResponse = await resp.json(content_type="application/json")
+                apiResponse = await resp.json(content_type=None)
                 logger.info(f"'X-Ratelimit-Limit': '{resp.headers.get('X-Ratelimit-Limit')}', "\
                             f"'X-Ratelimit-Remaining': '{resp.headers.get('X-Ratelimit-Remaining')}', "\
                             f"'X-Ratelimit-Reset': '{resp.headers.get('X-Ratelimit-Reset')}'")
