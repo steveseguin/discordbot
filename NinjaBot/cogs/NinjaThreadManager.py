@@ -121,9 +121,9 @@ class NinjaThreadManager(commands.Cog):
                 lensAnswer = await NinjaDocs.getLensAnswer(ctx.message.content)
                 if lensAnswer and not lensAnswer["text"].startswith("I don't know."):
                     lensEmbed = embedBuilder.ninjaEmbed(description=NinjaDocs.createEmbedTextFromLensResult(lensAnswer))
-                    await createdThread.send("While you wait, here is what NinjaBot thinks might help you with " \
+                    await createdThread.send("**While you wait, here is what NinjaBot thinks might help you with " \
                                              "your question. If it satisfies your request, click the \"This answered my question\" " \
-                                             "button below or use the /ask command to ask further specific questions.",
+                                             "button below or use the /ask command to ask further specific questions.**",
                                              embed=lensEmbed, view=LensReplyButtons(self, ctx.message.author.id))
 
     @app_commands.command(description="Change the thread title")
