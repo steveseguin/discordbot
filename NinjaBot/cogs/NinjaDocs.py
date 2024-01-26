@@ -93,7 +93,7 @@ class NinjaDocs(commands.Cog):
         answer["urls"] = []
         lensData = await self.lensRequest(message)
         if lensData:
-            logger.debug(json.dumps(lensData["text"], indent=2))
+            # logger.debug(json.dumps(lensData["text"], indent=2))
             answer["text"] = lensData["text"] # get text
             if len(lensData["pages"]):
                 # resolve top 3 pages to urls
@@ -183,10 +183,12 @@ class NinjaDocs(commands.Cog):
     async def doGbPostApiRequest(self, endpoint: str, data: dict) -> Union[dict, None]:
         try:
             async with self.http.post(self.gbBaseUrl + endpoint, json=data, headers=self.gbHeaders) as resp:
-                apiResponse = await resp.json(content_type="application/json")
-                logger.info(f"'X-Ratelimit-Limit': '{resp.headers.get('X-Ratelimit-Limit')}', "\
+                apiResponse = await resp.json(content_type=None)
+                logger.info(f"'status code': '{resp.status}', "\
+                            f"'X-Ratelimit-Limit': '{resp.headers.get('X-Ratelimit-Limit')}', "\
                             f"'X-Ratelimit-Remaining': '{resp.headers.get('X-Ratelimit-Remaining')}', "\
                             f"'X-Ratelimit-Reset': '{resp.headers.get('X-Ratelimit-Reset')}'")
+                logger.debug(json.dumps(apiResponse, indent=2))
                 if resp.status == 200: return apiResponse
                 return None
         except Exception as E:
