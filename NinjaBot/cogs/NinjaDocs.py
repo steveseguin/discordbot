@@ -93,7 +93,7 @@ class NinjaDocs(commands.Cog):
         answer["urls"] = []
         lensData = await self.lensRequest(message)
         if lensData:
-            logger.debug(json.dumps(lensData["text"], indent=2))
+            # logger.debug(json.dumps(lensData["text"], indent=2))
             answer["text"] = lensData["text"] # get text
             if len(lensData["pages"]):
                 # resolve top 3 pages to urls
@@ -184,9 +184,11 @@ class NinjaDocs(commands.Cog):
         try:
             async with self.http.post(self.gbBaseUrl + endpoint, json=data, headers=self.gbHeaders) as resp:
                 apiResponse = await resp.json(content_type=None)
-                logger.info(f"'X-Ratelimit-Limit': '{resp.headers.get('X-Ratelimit-Limit')}', "\
+                logger.info(f"'status code': '{resp.status}', "\
+                            f"'X-Ratelimit-Limit': '{resp.headers.get('X-Ratelimit-Limit')}', "\
                             f"'X-Ratelimit-Remaining': '{resp.headers.get('X-Ratelimit-Remaining')}', "\
                             f"'X-Ratelimit-Reset': '{resp.headers.get('X-Ratelimit-Reset')}'")
+                logger.debug(json.dumps(apiResponse, indent=2))
                 if resp.status == 200: return apiResponse
                 return None
         except Exception as E:
