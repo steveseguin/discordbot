@@ -191,7 +191,7 @@ class NinjaThreadManager(commands.Cog):
         message = msg.content
         match = re.match(r"^(?:\w+\W+){1,10}", message)
         if match:
-            return match.group(0)
+            return match.group(0)[:30]
         if not message and msg.attachments:
             return "Image"
         return message[:30]
