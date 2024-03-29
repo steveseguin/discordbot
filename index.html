@@ -182,7 +182,6 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 			// do some basic formatting replacements
 			var safeHtmlList = createHtmlListFromMessageSafe(message.content);
 			content.innerHTML = safeHtmlList;
-			content.innerText =  msgCnt;
 			content.className = "content";
 			ele.appendChild(content);
 
