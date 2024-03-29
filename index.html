@@ -96,6 +96,52 @@ function timeSince(date) {
 	return Math.floor(seconds) + " seconds";
 }
 
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function createHtmlListFromMessageSafe(messageContent) {
+  let htmlContent = "";
+  const lines = messageContent.split('\n');
+  let currentLevel = 0;
+
+  lines.forEach(line => {
+    // Remove Discord identifiers
+    line = line.replaceAll(/<#\d+>|<@\d+>/ig, "");
+
+    const indentation = line.match(/^\s*/)[0].length;
+    const level = indentation / 3;
+    const text = escapeHtml(line.trim().substring(1).trim()); // Escape HTML and remove leading '-'
+
+    while (level < currentLevel) {
+      htmlContent += "</ul></li>";
+      currentLevel--;
+    }
+    while (level > currentLevel) {
+      htmlContent += "<ul>";
+      currentLevel++;
+    }
+
+    if (text) {
+      htmlContent += `<li>${text}`;
+    }
+  });
+
+  while (currentLevel > 0) {
+    htmlContent += "</ul></li>";
+    currentLevel--;
+  }
+
+  // For parameters within the text, consider if they need special handling or if they should also be escaped
+  htmlContent = htmlContent.replace(/\s(&[a-zA-Z0-9=]+)/ig, " '$1'");
+
+  return htmlContent;
+}
 
 var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c9bfa782503942744b/raw/updates.json?ts="+Date.now()).then((response) => response.json())
 	.then((data) => {
@@ -134,12 +180,8 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 
 			// Text message
 			// do some basic formatting replacements
-			var msgCnt = message.content;
-			msgCnt = msgCnt.replaceAll(/<#\d+>/ig, ""); // Discord channel id's
-			msgCnt = msgCnt.replaceAll(/<@\d+>/ig, ""); // Discord user id's
-			msgCnt = msgCnt.replaceAll(/`/ig, ""); // backticks
-			msgCnt = msgCnt.replaceAll(/\s(&[a-zA-Z0-9=]+)/ig, " '$1'"); // add '' to all parameters
-
+			var safeHtmlList = createHtmlListFromMessageSafe(message.content);
+			content.innerHTML = safeHtmlList;
 			content.innerText =  msgCnt;
 			content.className = "content";
 			ele.appendChild(content);
