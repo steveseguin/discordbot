@@ -195,6 +195,9 @@ var data = fetch("https://gist.githubusercontent.com/steveseguin/274f00dc5667f7c
 						var img = document.createElement("img");
 						img.src =  "https://imgcache.vdo.ninja/updates/?imgurl="+encodeURIComponent(attachment.url);
 						img.className = "attachment";
+						img.onerror = function() {
+							this.style.display='none';
+						};	
 						img.onclick = function() {
 							 window.open(this.src, '_blank').focus();
 						}
