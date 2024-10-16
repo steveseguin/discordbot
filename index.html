@@ -105,23 +105,92 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
+const markdownStyles = `
+<style>
+.markdown-content h2 {
+  font-size: 1.5em;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-content h3 {
+  font-size: 1.2em;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+}
+
+.markdown-content strong {
+  font-weight: bold;
+}
+
+.markdown-content code {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #f0f0f0;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.markdown-content pre {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+}
+</style>
+`;
+
+document.head.insertAdjacentHTML('beforeend', markdownStyles);
+
 function createHtmlListFromMessageSafe(messageContent) {
-  let htmlContent = "";
+  let htmlContent = "<div class='markdown-content'>";
   const lines = messageContent.split('\n');
   let currentLevel = 0;
+  let inCodeBlock = false;
 
   lines.forEach(line => {
     // Remove Discord identifiers
     line = line.replaceAll(/<#\d+>|<@\d+>/ig, "");
 
+    if (line.trim().startsWith("```")) {
+      if (inCodeBlock) {
+        htmlContent += "</pre>";
+        inCodeBlock = false;
+      } else {
+        htmlContent += "<pre><code>";
+        inCodeBlock = true;
+      }
+      return;
+    }
+
+    if (inCodeBlock) {
+      htmlContent += escapeHtml(line) + "\n";
+      return;
+    }
+
+    // Handle headers
+    if (line.trim().startsWith("# ")) {
+      htmlContent += `<h2>${escapeHtml(line.trim().substring(2))}</h2>`;
+      return;
+    }
+    if (line.trim().startsWith("## ")) {
+      htmlContent += `<h3>${escapeHtml(line.trim().substring(3))}</h3>`;
+      return;
+    }
+
     const indentation = line.match(/^\s*/)[0].length;
     const level = indentation / 3;
-	  
     let text = line.trim();
+
+    // Remove leading '-' if present
     if (text.startsWith("-")) {
       text = text.substring(1).trim();
     }
-    text = escapeHtml(text);
+
+    // Handle inline code and bold
+    text = escapeHtml(text)
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*([^\*]+)\*/g, '<strong>$1</strong>');
 
     while (level < currentLevel) {
       htmlContent += "</ul></li>";
@@ -133,7 +202,7 @@ function createHtmlListFromMessageSafe(messageContent) {
     }
 
     if (text) {
-      htmlContent += `<li>${text}`;
+      htmlContent += `<li>${text}</li>`;
     }
   });
 
@@ -142,7 +211,8 @@ function createHtmlListFromMessageSafe(messageContent) {
     currentLevel--;
   }
 
-  // For parameters within the text, consider if they need special handling or if they should also be escaped
+  htmlContent += "</div>";
+
   htmlContent = htmlContent.replace(/\s(&[a-zA-Z0-9=]+)/ig, " '$1'");
 
   return htmlContent;
