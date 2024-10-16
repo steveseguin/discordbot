@@ -148,6 +148,15 @@ function createHtmlListFromMessageSafe(messageContent) {
   let currentLevel = 0;
   let inCodeBlock = false;
 
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   lines.forEach(line => {
     // Remove Discord identifiers
     line = line.replaceAll(/<#\d+>|<@\d+>/ig, "");
@@ -187,10 +196,16 @@ function createHtmlListFromMessageSafe(messageContent) {
       text = text.substring(1).trim();
     }
 
+    // Escape HTML first
+    text = escapeHtml(text);
+
     // Handle inline code and bold
-    text = escapeHtml(text)
+    text = text
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       .replace(/\*([^\*]+)\*/g, '<strong>$1</strong>');
+
+    // Handle quotes
+    text = text.replace(/"([^"]+)"/g, '&ldquo;$1&rdquo;');
 
     while (level < currentLevel) {
       htmlContent += "</ul></li>";
@@ -212,8 +227,6 @@ function createHtmlListFromMessageSafe(messageContent) {
   }
 
   htmlContent += "</div>";
-
-  htmlContent = htmlContent.replace(/\s(&[a-zA-Z0-9=]+)/ig, " '$1'");
 
   return htmlContent;
 }
