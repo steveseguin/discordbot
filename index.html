@@ -116,7 +116,8 @@ function createHtmlListFromMessageSafe(messageContent) {
 
     const indentation = line.match(/^\s*/)[0].length;
     const level = indentation / 3;
-    const text = escapeHtml(line.trim().substring(1).trim()); // Escape HTML and remove leading '-'
+    let text = escapeHtml(line.trim();
+    !text.startsWith("-") || text = text.substring(1).trim(); // Escape HTML and remove leading '-'
 
     while (level < currentLevel) {
       htmlContent += "</ul></li>";
