@@ -1,4 +1,3 @@
-#NinjaAI.py
 import logging
 import json
 import aiohttp

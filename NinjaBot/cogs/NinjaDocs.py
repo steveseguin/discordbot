@@ -10,6 +10,8 @@ from discord import app_commands
 from discord.ext import commands
 from typing import Union
 
+# This module is basically deprecated by NinjaAI
+
 logger = logging.getLogger("NinjaBot." + __name__)
 
 class NinjaDocs(commands.Cog):

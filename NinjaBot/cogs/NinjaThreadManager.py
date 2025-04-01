@@ -3,6 +3,7 @@ import logging
 import re
 import discord
 import embedBuilder
+import ai
 from discord.ext import commands
 from discord import app_commands
 
@@ -85,15 +86,7 @@ class NinjaThreadManager(commands.Cog):
         logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
         self.isInternal = True
-        
-        # Import NinjaAI here instead of at the top level
-        try:
-            from NinjaAI import NinjaAI
-            self.ai = NinjaAI(bot)
-            logger.info("Successfully initialized NinjaAI")
-        except ImportError:
-            logger.error("Failed to import NinjaAI module")
-            self.ai = None
+        self.ai = ai.NinjaAI(bot)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -347,10 +340,11 @@ class NinjaThreadManager(commands.Cog):
     @app_commands.command()
     @app_commands.guild_only()
     @app_commands.checks.has_permissions(manage_messages=True)
-    async def askbot(self, interaction: discord.Interaction, question: str) -> None:
+    async def ask(self, interaction: discord.Interaction, question: str) -> None:
         """Get an AI-generated answer to a question"""
         if not isinstance(interaction.channel, discord.Thread):
             await interaction.response.send_message("This command can only be used in threads", ephemeral=True)
+            # TODO: Ignore history if the current channel is not a thread
             return
             
         if not self.ai:
