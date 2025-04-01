@@ -100,8 +100,6 @@ class NinjaBot(commands.Bot):
         await self.load_extension("cogs.NinjaUpdates")
         # auto-thread manager
         await self.load_extension("cogs.NinjaThreadManager")
-        # docs help tool
-        await self.load_extension("cogs.NinjaDocs")
 
         # takes care of pushing all application commands to discord
         guild = int(self.config.get("guild"))
@@ -178,7 +176,7 @@ class NinjaBot(commands.Bot):
             logger.exception(err)
 
 async def main() -> None:
-    logger.info("Starting up NinjaBot V2.2")
+    logger.info("Starting up NinjaBot V2.3")
     try:
         await config.parse()
     except Exception as E:
@@ -204,31 +202,6 @@ if __name__ == "__main__":
 
 """
 general TODO list:
-- (DONE) load commands file from github (hot reloadable)
-- (DONE) make content from github commands usable
-- (DONE) make embed generation into it's own class that inherits from Embed
-- (DONE) make bot into it's own class
-- (DONE) make bot delete the message that invDONEed it
-- (DONE) use embeds for responses where possible
-- (DONE) if user was pinged in command then ping user in response
-- (DONE) make commands only work at start of message
-- (DONE) instead of mentioning a use in the bot reply, make a native reply to the last message from the pinged user
-- (DONE) if command is used in reply to another user, replace that reply with bot reply
-- (DONE) rework logging and add optional file logger
-- (DONE) spammer detection with kick/ban
-- (DONE) load commands from dynamic file (hot reloadable)
-- (DONE) make content from dynamic file usable
-- (DONE) command to add a new command to dynamic file and reload it
-- (DONE) reddit integration for new posts to reddit channel (asyncpraw)
-- (DONE) add bot activity ("just helping out"?)
-- (DONE) add update page logic
-- (DONE) Watch message edits to update page logic
-- (DONE) replace usernames and channelid's in updates message with their names
-- (DONE) Add youtube integration for steve's channel
-- (DONE) (NinjaThreadManager) replicate auto thread creation that is currently handled by the 3rd party bot (button for Thread.edit(archived=True, reason="Close Button"))
-- (DONE) (NinjaThreadManager) add !login/!logout for a user to be auto-added (add_user) to a newly created thread (maybe buttons later)
-- (DONE) get docs search working again and line it up with other cogs
-- (DONE) Refactor youtube and reddit modules to save post id's to config
 - (Bonus) (NinjaUpdates) Improvement: convert discord formatting into html for update page (include images and user avatar)
 - (Bonus) Improvement: add register and unregister method to main bot class (save first part of command and callback?)
 - (Bonus) Improvement: use cog_unload to run unregister and update to update (check if valid)
