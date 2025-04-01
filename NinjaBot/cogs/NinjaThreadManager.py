@@ -209,10 +209,11 @@ class NinjaThreadManager(commands.Cog):
                 # Send welcome message
                 welcomeMapping = self.bot.config.get("autoThreadWelcomeMapping")
                 try:
-                    welcomeText = self.bot.config.get(welcomeMapping[str(ctx.channel.id)])
-                    welcomeText = welcomeText.format(usermention=ctx.message.author.mention)
-                    embed = embedBuilder.ninjaEmbed(description=welcomeText)
-                    await createdThread.send(embed=embed, view=ThreadManagementButtons(self, ctx.message.author.id))
+                    if str(ctx.channel.id) in welcomeMapping:
+                        welcomeText = self.bot.config.get(welcomeMapping[str(ctx.channel.id)])
+                        welcomeText = welcomeText.format(usermention=ctx.message.author.mention)
+                        embed = embedBuilder.ninjaEmbed(description=welcomeText)
+                        await createdThread.send(embed=embed, view=ThreadManagementButtons(self, ctx.message.author.id))
                 except Exception as e:
                     logger.exception(f"Error sending welcome message: {e}")
                 
