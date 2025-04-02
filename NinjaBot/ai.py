@@ -51,7 +51,7 @@ class NinjaAI:
             "You are VDO.Ninja's support assistant. Your goal is to help users with their questions about VDO.Ninja, "
             "which is a free, open-source project that leverages WebRTC technology to bring live video broadcasting "
             "to viewers using peer-to-peer connections. Be concise, accurate, and friendly. If you don't know the answer "
-            "or if the question is not related to VDO.Ninja, say so and suggest they wait for a human moderator to respond."
+            "or if the question is not related to VDO.Ninja, say so and suggest they wait for human assistance to respond."
         )
         
         # If we have channel-specific instructions, use them
@@ -275,7 +275,7 @@ class NinjaAI:
             return await self._get_ollama_response(messages, channel_id)
         else:
             logger.warning(f"Unsupported AI service: {service}")
-            return "I'm currently under maintenance. Please wait for a human moderator to assist you."
+            return "I'm currently under maintenance. Please wait for a human to assist you."
     
     async def _get_openai_response(self, messages: List[Dict[str, Any]], channel_id: str = None) -> Union[str, None]:
         """Get response from OpenAI API"""
