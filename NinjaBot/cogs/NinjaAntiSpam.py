@@ -1,6 +1,6 @@
 import logging
 import discord
-import embedBuilder
+import utils.embedBuilder as embedBuilder
 import re
 from asyncio import sleep
 from discord.ext import commands, tasks

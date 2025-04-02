@@ -1,4 +1,4 @@
-import embedBuilder
+import utils.embedBuilder as embedBuilder
 from discord import utils
 from discord import DMChannel
 from discord.ext.commands import Context

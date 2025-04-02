@@ -1,6 +1,6 @@
 import logging
 import asyncpraw
-import embedBuilder
+import utils.embedBuilder as embedBuilder
 import re
 from discord.ext import commands, tasks
 from discord import Colour

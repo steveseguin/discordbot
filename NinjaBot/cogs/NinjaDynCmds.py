@@ -2,8 +2,8 @@ import logging
 import pathlib
 from re import S
 from discord.ext import commands, tasks
-from commandReplyProcessor import commandProc
-from jsonFile import fileHelper
+from utils.commandReplyProcessor import commandProc
+from utils.jsonFile import fileHelper
 
 logger = logging.getLogger("NinjaBot." + __name__)
 

@@ -1,5 +1,5 @@
 import logging
-from jsonFile import fileHelper
+from utils.jsonFile import fileHelper
 
 logger = logging.getLogger("NinjaBot." + __name__)
 

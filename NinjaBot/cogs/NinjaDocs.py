@@ -1,5 +1,5 @@
 import logging
-import embedBuilder
+import utils.embedBuilder as embedBuilder
 import re
 import asyncio
 import json
@@ -9,6 +9,8 @@ import time
 from discord import app_commands
 from discord.ext import commands
 from typing import Union
+
+# This module is basically deprecated by NinjaAI
 
 logger = logging.getLogger("NinjaBot." + __name__)
 
