@@ -2,8 +2,8 @@
 import logging
 import re
 import discord
-import embedBuilder
-import ai
+import utils.embedBuilder as embedBuilder
+import utils.ai as ai
 from discord.ext import commands
 from discord import app_commands
 

@@ -1,7 +1,7 @@
 import logging
 import aiohttp
 from discord.ext import commands, tasks
-from commandReplyProcessor import commandProc
+from utils.commandReplyProcessor import commandProc
 
 logger = logging.getLogger("NinjaBot." + __name__)
 

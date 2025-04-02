@@ -1,5 +1,5 @@
 import logging
-import embedBuilder
+import utils.embedBuilder as embedBuilder
 from discord.ext import commands
 from discord import DMChannel
 

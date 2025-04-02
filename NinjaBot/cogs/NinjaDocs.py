@@ -1,5 +1,5 @@
 import logging
-import embedBuilder
+import utils.embedBuilder as embedBuilder
 import re
 import asyncio
 import json

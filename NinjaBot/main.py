@@ -6,7 +6,7 @@ import discord
 import discord.ext.commands
 import logging.handlers
 from discord.ext import commands
-from config import Config
+from utils.config import Config
 
 # get local directory as path object
 LOCALDIR = pathlib.Path(__file__).parent.resolve()
