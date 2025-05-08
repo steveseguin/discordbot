@@ -31,7 +31,7 @@
     "python": "python > node",
     "reddit": "The **official reddit** page for updates and discussions about VDO.Ninja can be found at https://www.reddit.com/r/VDONinja",
     "remoteninja": "Remote control for OBS using a dash of the VDO.Ninja special sauce\n<https://github.com/steveseguin/remote_ninja>",
-    "s": "If you need help, support or have feedback regarding one of the Ninja products, please use <#746573900715917334>, <#877898730240634920>, <#792425204793606186> or <#701496038166495343> respectively!",
+    "s": "If you need help, support or have feedback regarding one of the Ninja products, please use\n- <#746573900715917334>\n- <#877898730240634920>\n- <#792425204793606186>\n- <#701496038166495343>\nrespectively!",
     "software": "The technologies used in the creation of VDO.Ninja are application agnostic. It doesn’t know how the output URL is being used. To that end, any software that can use a browser based source should be capable of using the output URL provided by vdo.ninja. However, VDO.Ninja is only officially tested using OBS (obsproject.com), and functionality developed to address the needs of that user base.",
     "speedtest": "You can check your vdo.ninja performance here: <https://vdo.ninja/speedtest>\nThis will send your video/ audio feed to VDO.Ninja's server and back. It is then possible to check for some metrics like bitrate, packet loss or buffer.",
     "sponsor": "**Thank you** for considering supporting the project. Any donation helps cover the server costs for the community and prolongs the development of VDO.Ninja. <:obsninjaheart:708271382190096395>\nhttps://docs.vdo.ninja/getting-started/sponsor",
