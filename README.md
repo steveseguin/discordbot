@@ -147,6 +147,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 For small code contributions, simply submit a PR. For larger changes or new features, please get in touch with the maintainers first.
 
-## License
-
-This project is open source under the MIT license.
