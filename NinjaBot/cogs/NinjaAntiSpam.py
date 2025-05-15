@@ -31,7 +31,7 @@ class NinjaAntiSpam(commands.Cog):
             or message.type == discord.MessageType.reply):
             # ignore messages by bots, moderators and system messages
             return
-
+    
         # use message text itself or the filename as the message
         if message.content:
             msg = message.content
@@ -39,11 +39,12 @@ class NinjaAntiSpam(commands.Cog):
             msg = message.attachments[0].filename
         else:
             msg = ""
-
+    
         now = datetime.now().timestamp()
         uid = message.author.id
         abuseInc = 0
-
+        current_channel = message.channel.id
+    
         if not uid in self.h:
             # user is not currently in our message buffer, add them
             # also can't judge in here if it's spam or not
@@ -52,20 +53,29 @@ class NinjaAntiSpam(commands.Cog):
             self.h[uid]["lmts"] = now
             self.h[uid]["abuse"] = 0
             self.h[uid]["msgs"] = [[message.id, message.channel.id]]
+            self.h[uid]["channels"] = [current_channel]  # Track channels
             logger.debug(f"built new user {str(uid)}/{str(message.author)} object {self.h[uid]}")
         else:
             # user has posted their 2nd+ message
             self.h[uid]["msgs"].append([message.id, message.channel.id])
-
+            
+            # Add current channel to user's channel list if not already present
+            if current_channel not in self.h[uid]["channels"]:
+                self.h[uid]["channels"].append(current_channel)
+    
             # calculate message distance using sift4
             dist = self.s.distance(self.h[uid]["lm"], msg)
             logger.debug(f"sift4 distance: {dist}")
-            if dist == 0:
-                # messages are way too close
-                abuseInc = 1.5
-            elif dist == 1:
-                # messages are too close
-                abuseInc = 1
+            
+            # Only increment abuse if posting in DIFFERENT channels
+            if len(self.h[uid]["channels"]) > 1:
+                if dist == 0:
+                    # messages are way too close
+                    abuseInc = 1.5
+                elif dist == 1:
+                    # messages are too close
+                    abuseInc = 1
+            
             if self.h[uid]["abuse"] < 3: # it is not spam (at least yet)
                 self.h[uid]["lmts"] = now
                 self.h[uid]["lm"] = msg
