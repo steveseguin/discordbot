@@ -1,6 +1,6 @@
 # VDO.Ninja Discord Bot
 
-A comprehensive Discord bot for the VDO.Ninja community, providing automated support, content updates, and community management features.
+A comprehensive Discord bot for the [VDO.Ninja community](https://discord.vdo.ninja), providing automated support, content updates, and community management features.
 
 ![Contributors](https://contrib.rocks/image?repo=steveseguin/discordbot)
 
