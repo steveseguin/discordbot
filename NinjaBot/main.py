@@ -71,8 +71,7 @@ class NinjaBot(commands.Bot):
             command_prefix=self.config.get("commandPrefix"),
             intents=intents,
             allowed_mentions=mentions,
-            help_command=None,
-            log_handler=None
+            help_command=None
         )
 
     # informational event when bot has finished logging in
@@ -123,11 +122,11 @@ class NinjaBot(commands.Bot):
         elif ctx.message.content.startswith(self.config.get("commandPrefix")):
             # might be a command. pass it around to see if anyone wants to deal with it
             # in order: github -> dynamic command -> native command
-            NinjaDynCmds = self.get_cog("NinjaDynCmds")
-            if await NinjaDynCmds.process_command(ctx):
+            dynamicCommands = self.get_cog("NinjaDynCmds")
+            if dynamicCommands and await dynamicCommands.process_command(ctx): #type:ignore
                 return
             NinjaGithub = self.get_cog("NinjaGithub")
-            if await NinjaGithub.process_command(ctx):
+            if NinjaGithub and await NinjaGithub.process_command(ctx):  #type:ignore
                 return
             # otherwise look elsewhere for command
             logger.debug("Command not found by custom handlers, try processing native commands")
@@ -169,7 +168,8 @@ class NinjaBot(commands.Bot):
             await interaction.response.send_message(str(err), ephemeral=True)
         elif isinstance(err, discord.app_commands.CheckFailure):
             # log check failures
-            logger.info(f"user '{interaction.user.display_name}' tried to run '{interaction.command.qualified_name}' but '{err}'")
+            logger.info(f"user '{interaction.user.display_name}' tried to run '\
+                        '{getattr(interaction.command, "qualified_name", "Unknown interaction")}' but '{err}'")
             # inform user of their poor choice
             await interaction.response.send_message("You cannot run this command here", ephemeral=True)
         else:
@@ -190,7 +190,9 @@ async def main() -> None:
 
     logger.info("Extensions loaded. Starting server")
     try:
-        await nBot.start(config.get("discordBotToken"))
+        token = config.get("discordBotToken")
+        if token:
+            await nBot.start(token)
     except KeyboardInterrupt:
         pass
     await nBot.close()

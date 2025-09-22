@@ -26,7 +26,7 @@ class NinjaAntiSpam(commands.Cog):
         if message.author == self.bot.user \
             or message.author.bot \
             or isinstance(message.channel, discord.DMChannel) \
-            or (hasattr(message.author, "roles") and discord.utils.get(message.author.roles, name="Moderator")) \
+            or (hasattr(message.author, "roles") and discord.utils.get(getattr(message.author, "roles"), name="Moderator")) \
             or not (message.type == discord.MessageType.default \
             or message.type == discord.MessageType.reply):
             # ignore messages by bots, moderators and system messages
@@ -85,22 +85,26 @@ class NinjaAntiSpam(commands.Cog):
             logger.info("Discord invite link found, deleting message")
             abuseInc = 1.5 # increase the abuse count (more then for a normal message)
             self.h[uid]["msgs"].pop() # remove last saved message since we already delete them here
-            not isinstance(message.channel, DMChannel) and await message.delete()
+            if not isinstance(message.channel, DMChannel):
+                await message.delete()
 
             botmsg = await message.channel.send(f"Hey there {message.author.mention}, any discord (invite) links are not allowed here! Repeated posts may lead to moderation actions!")
             await sleep(4)
-            not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
+            if not isinstance(botmsg.channel, DMChannel):
+                await botmsg.delete()
 
         # find stream keys in messages and delete them for safetly
         # right now we have youtube and twitch
         if len(re.findall(r"(?:live_\d{8}_[a-zA-Z0-9]{32})|(?:[a-z0-9]{4}-){4}[a-z0-9]{4}", message.content)):
             logger.info("Streamkey was found in message, deleting for safety")
-            not isinstance(message.channel, DMChannel) and await message.delete()
+            if not isinstance(message.channel, DMChannel):
+                await message.delete()
 
             botmsg = await message.channel.send(f"Hey there {message.author.mention}, there was a stream key found in your last message. "
                                                 "For your safety the message was deleted. You can post your message again without doxing yourself ;)")
             await sleep(12)
-            not isinstance(botmsg.channel, DMChannel) and await botmsg.delete()
+            if not isinstance(botmsg.channel, DMChannel):
+                await botmsg.delete()
 
         self.h[uid]["abuse"] += abuseInc
         if abuseInc > 0: 
@@ -143,7 +147,7 @@ class NinjaAntiSpam(commands.Cog):
         logger.debug("cleanupMember() done")
 
     async def deleteOldMessages(self, msgs, botlogCh) -> None:
-        blMsg = ""
+        blMsg = line = ""
         for mid, chid in msgs:
             try:
                 spamChannel = self.bot.get_channel(chid)
@@ -153,7 +157,7 @@ class NinjaAntiSpam(commands.Cog):
                     line = f"{msg.channel.name}: {msg.attachments[0].filename} <{msg.attachments[0].url}>"
                 if msg.content:
                     line = f"{msg.channel.name}: {msg.content}"
-                logger.warn(line)
+                logger.warning(line)
                 await msg.delete()
                 if len(blMsg) + len(line) > 4090:
                     await self.sendReport(botlogCh, blMsg)

@@ -62,7 +62,7 @@ class NinjaUpdates(commands.Cog):
                     newEntry = dict()
                     newEntry["content"] = await self.formatMessageContent(message)
                     newEntry["timestamp"] = datetime.now().timestamp()
-                    newEntry["name"] = message.author.nick or message.author.name
+                    newEntry["name"] = getattr(message.author, "nick", None) or message.author.name
                     newEntry["msgid"] = str(message.id)
                     newEntry["avatar"] = str(message.author.display_avatar.url or "")
                     newEntry["attachments"] = self.getAttachments(message)
