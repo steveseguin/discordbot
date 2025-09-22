@@ -1,13 +1,14 @@
 import logging
+from pathlib import Path
 from utils.jsonFile import fileHelper
 
 logger = logging.getLogger("NinjaBot." + __name__)
 
 class Config:
     """A helper class to handle the bot config file"""
-    def __init__(self, file: str) -> None:
+    def __init__(self, file: str | Path) -> None:
         self._fh = fileHelper(file)
-        self._configOptions = None
+        self._configOptions = {}
 
     async def parse(self) -> None:
         """read config file"""
@@ -15,7 +16,7 @@ class Config:
 
     def get(self, key):
         """return a config option by the given key"""
-        return self._configOptions[key]
+        return self._configOptions.get(key)
 
     def has(self, key):
         return bool(key in self._configOptions)

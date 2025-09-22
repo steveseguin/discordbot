@@ -27,6 +27,7 @@ class NinjaDocs(commands.Cog):
             }
         self.urlCache: dict[str, tuple[int, str]] = {}
 
+    @staticmethod
     def _checkIfInATEC(interaction: discord.Interaction) -> bool:
         return str(interaction.channel_id) not in interaction.client.config.get("autoThreadEnabledChannels")
 
@@ -78,7 +79,7 @@ class NinjaDocs(commands.Cog):
         return t
 
     # request answer from lens and process it
-    async def getLensAnswer(self, message: str=None) -> Union[dict, None]:
+    async def getLensAnswer(self, message: str | None = None) -> Union[dict, None]:
         # don't proceed if we don't have a message
         if not message: return None
 
@@ -162,16 +163,16 @@ class NinjaDocs(commands.Cog):
         return None
 
     # resolve a gitbook page id to a usable url
-    async def resolveGbPageIdToUrl(self, pageId: str) -> Union[str, None]:
+    async def resolveGbPageIdToUrl(self, pageId: str) -> str | None:
         try:
-            response = await self.doGbGetApiRequest(f"spaces/{self.bot.config.get('gitbookSpaceId')}/content/page/{pageId}", None)
+            response = await self.doGbGetApiRequest(f"spaces/{self.bot.config.get('gitbookSpaceId')}/content/page/{pageId}")
             return response
         except Exception as E:
             logger.exception(E)
             return None
 
     # perform a get request to the gitbook api
-    async def doGbGetApiRequest(self, endpoint: str, params: dict) -> Union[dict, None]:
+    async def doGbGetApiRequest(self, endpoint: str, params: dict | None = None) -> dict | None:
         try:
             async with self.http.get(self.gbBaseUrl + endpoint, params=params, headers=self.gbHeaders) as resp:
                 apiResponse = await resp.json(content_type="application/json")
@@ -182,7 +183,7 @@ class NinjaDocs(commands.Cog):
             return None
 
     # perform a post request to the gitbook api
-    async def doGbPostApiRequest(self, endpoint: str, data: dict) -> Union[dict, None]:
+    async def doGbPostApiRequest(self, endpoint: str, data: dict) -> dict | None:
         try:
             async with self.http.post(self.gbBaseUrl + endpoint, json=data, headers=self.gbHeaders) as resp:
                 apiResponse = await resp.json(content_type=None)
@@ -201,7 +202,7 @@ class NinjaDocs(commands.Cog):
 
     async def cog_command_error(self, ctx, error) -> None:
         """Post error that happen inside this cog to channel"""
-        await ctx.send(error)
+        await ctx.send(str(error))
 
     async def getCommands(self) -> list:
         """Return the available commands as a list"""

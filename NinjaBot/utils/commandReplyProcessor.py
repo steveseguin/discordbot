@@ -14,17 +14,21 @@ async def commandProc(self, ctx: Context):
                 # 2nd part of the if statement is for then a user is trying to mention themselfs
                 # 3rd part stops the bot from replying to itself
                 lastMessage = await utils.get(ctx.channel.history(limit=15), author=ctx.message.mentions[0])
-                lastMessage and await lastMessage.reply(embed=embed)
+                if lastMessage:
+                    await lastMessage.reply(embed=embed)
                 if len(line) > 2: return True
-            elif ctx.message.reference:
+            elif ctx.message.reference and type(ctx.message.reference.message_id) == int:
                 # like above, but reply was used instead of mention
                 initialMessage = await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                not initialMessage.author.bot and await initialMessage.reply(embed=embed)
+                if not initialMessage.author.bot:
+                    await initialMessage.reply(embed=embed)
             else:
                 # every other case
                 await ctx.send(embed=embed)
-            if len(line) > 1: return True
-            not isinstance(ctx.channel, DMChannel) and await ctx.message.delete()
+            if len(line) > 1:
+                return True
+            if not isinstance(ctx.channel, DMChannel):
+                await ctx.message.delete()
             return True
     except Exception as E:
         raise E
