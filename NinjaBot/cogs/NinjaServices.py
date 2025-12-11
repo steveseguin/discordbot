@@ -28,13 +28,25 @@ class ServiceApprovalView(View):
             await interaction.response.send_message("You don't have permission to approve listings.", ephemeral=True)
             return
 
-        # Get the original message with the embed
+        # Get the original webhook message (the one this message is replying to)
         message = interaction.message
-        if not message or not message.embeds:
+        if not message or not message.reference:
             await interaction.response.send_message("Could not find submission data.", ephemeral=True)
             return
 
-        embed = message.embeds[0]
+        # Fetch the referenced message (the webhook submission)
+        try:
+            original_message = await message.channel.fetch_message(message.reference.message_id)
+        except Exception as e:
+            logger.error(f"Could not fetch original message: {e}")
+            await interaction.response.send_message("Could not find original submission.", ephemeral=True)
+            return
+
+        if not original_message.embeds:
+            await interaction.response.send_message("Original message has no embed data.", ephemeral=True)
+            return
+
+        embed = original_message.embeds[0]
 
         # Parse the submission
         service_data = self.cog.parse_submission_embed(embed)
@@ -48,16 +60,17 @@ class ServiceApprovalView(View):
         success = await self.cog.add_service_to_gist(service_data)
 
         if success:
-            # Update the embed to show approved
+            # Update the original embed to show approved
             new_embed = embed.copy()
             new_embed.color = 0x00C853  # Green
             new_embed.set_footer(text=f"✅ Approved by {interaction.user.display_name} on {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+            await original_message.edit(embed=new_embed)
 
-            # Disable buttons
+            # Disable buttons on the bot's reply message
             for item in self.children:
                 item.disabled = True
+            await message.edit(view=self)
 
-            await message.edit(embed=new_embed, view=self)
             await interaction.followup.send(f"Service listing for **{service_data.get('name', 'Unknown')}** has been approved and published!", ephemeral=True)
 
             # Announce in public channel
@@ -77,22 +90,35 @@ class ServiceApprovalView(View):
             return
 
         message = interaction.message
-        if not message or not message.embeds:
+        if not message or not message.reference:
             await interaction.response.send_message("Could not find submission data.", ephemeral=True)
             return
 
-        embed = message.embeds[0]
+        # Fetch the referenced message (the webhook submission)
+        try:
+            original_message = await message.channel.fetch_message(message.reference.message_id)
+        except Exception as e:
+            logger.error(f"Could not fetch original message: {e}")
+            await interaction.response.send_message("Could not find original submission.", ephemeral=True)
+            return
 
-        # Update the embed to show rejected
+        if not original_message.embeds:
+            await interaction.response.send_message("Original message has no embed data.", ephemeral=True)
+            return
+
+        embed = original_message.embeds[0]
+
+        # Update the original embed to show rejected
         new_embed = embed.copy()
         new_embed.color = 0xD50000  # Red
         new_embed.set_footer(text=f"❌ Rejected by {interaction.user.display_name} on {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        await original_message.edit(embed=new_embed)
 
-        # Disable buttons
+        # Disable buttons on the bot's reply message
         for item in self.children:
             item.disabled = True
+        await message.edit(view=self)
 
-        await message.edit(embed=new_embed, view=self)
         await interaction.response.send_message("Submission rejected.", ephemeral=True)
 
         logger.info(f"Rejected service listing by {interaction.user.display_name}")
