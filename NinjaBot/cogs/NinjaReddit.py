@@ -2,6 +2,7 @@ import logging
 import asyncpraw
 import utils.embedBuilder as embedBuilder
 import re
+from datetime import datetime, timezone, timedelta
 from discord.ext import commands, tasks
 from discord import Colour
 from asyncio import sleep
@@ -31,6 +32,11 @@ class NinjaReddit(commands.Cog):
             ninjaSubreddit = await self.Reddit.subreddit("VDONinja")
             async for submission in ninjaSubreddit.new(limit=10):
                 if submission.id in postedSubmissions: continue
+                # Skip posts older than 3 days (safety net if tracking list is lost)
+                post_age = datetime.now(timezone.utc) - datetime.fromtimestamp(submission.created_utc, tz=timezone.utc)
+                if post_age > timedelta(days=3):
+                    logger.debug(f"Skipping old Reddit post: {submission.title} ({post_age.days} days old)")
+                    continue
                 # since post was not yet posted, add to posting queue
                 toPostSubmissions.append(submission)
         except Exception as E:

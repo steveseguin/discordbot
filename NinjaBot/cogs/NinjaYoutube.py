@@ -2,6 +2,7 @@ import logging
 import asyncio
 import functools
 import googleapiclient.discovery
+from datetime import datetime, timezone, timedelta
 from discord.ext import commands, tasks
 from asyncio import sleep
 
@@ -43,7 +44,13 @@ class NinjaYoutube(commands.Cog):
                     if not video["snippet"]["description"]: continue
                     if not video["snippet"]["title"]: continue
                     #if "#VDO.Ninja" not in video["snippet"]["description"]: continue
-                    if "#Shorts" in video["snippet"]["title"]: continue                   
+                    if "#Shorts" in video["snippet"]["title"]: continue
+                    # Skip videos older than 3 days (safety net if tracking list is lost)
+                    published_at = datetime.fromisoformat(video["snippet"]["publishedAt"].replace("Z", "+00:00"))
+                    video_age = datetime.now(timezone.utc) - published_at
+                    if video_age > timedelta(days=3):
+                        logger.debug(f"Skipping old YouTube video: {video['snippet']['title']} ({video_age.days} days old)")
+                        continue
                     # since video was not yet posted(otherwise we would not reach here), add to posting queue
                     logger.info(video)
                     toPostVideos.append(video)
