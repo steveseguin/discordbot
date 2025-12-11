@@ -32,53 +32,97 @@ class NinjaAntiSpam(commands.Cog):
             # ignore messages by bots, moderators and system messages
             return
     
-        # use message text itself or the filename as the message
-        if message.content:
-            msg = message.content
-        elif message.attachments:
-            msg = message.attachments[0].filename
-        else:
-            msg = ""
-    
         now = datetime.now().timestamp()
         uid = message.author.id
         abuseInc = 0
         current_channel = message.channel.id
     
-        if not uid in self.h:
+        if uid not in self.h:
             # user is not currently in our message buffer, add them
             # also can't judge in here if it's spam or not
-            self.h[uid] = dict()
-            self.h[uid]["lm"] = msg
-            self.h[uid]["lmts"] = now
-            self.h[uid]["abuse"] = 0
-            self.h[uid]["msgs"] = [[message.id, message.channel.id]]
-            self.h[uid]["channels"] = [current_channel]  # Track channels
+            self.h[uid] = {
+                "lm": "",  # Only store text content, not filenames
+                "lmts": now,
+                "abuse": 0,
+                "msgs": [[message.id, message.channel.id]],
+                "channels": [],  # Track channels for text spam
+                "image_channels": [],  # Track channels where images were posted
+                "image_timestamps": {},  # {channel_id: [timestamps]} for rate limiting
+            }
             logger.debug(f"built new user {str(uid)}/{str(message.author)} object {self.h[uid]}")
         else:
             # user has posted their 2nd+ message
             self.h[uid]["msgs"].append([message.id, message.channel.id])
-            
-            # Add current channel to user's channel list if not already present
+            self.h[uid]["lmts"] = now
+
+        # Determine if this is an image-only message or has text
+        has_text = bool(message.content)
+        has_image = bool(message.attachments)
+
+        # Handle TEXT messages (use SIFT4 similarity for cross-channel text spam)
+        if has_text and uid in self.h and self.h[uid]["lm"]:
+            # Add current channel to text channel list if not already present
             if current_channel not in self.h[uid]["channels"]:
                 self.h[uid]["channels"].append(current_channel)
-    
-            # calculate message distance using sift4
-            dist = self.s.distance(self.h[uid]["lm"], msg)
+
+            # Calculate message distance using sift4
+            dist = self.s.distance(self.h[uid]["lm"], message.content)
             logger.debug(f"sift4 distance: {dist}")
-            
-            # Only increment abuse if posting in DIFFERENT channels
+
+            # Only increment abuse if posting similar text in DIFFERENT channels
             if len(self.h[uid]["channels"]) > 1:
                 if dist == 0:
-                    # messages are way too close
+                    # messages are identical
                     abuseInc = 1.5
                 elif dist == 1:
-                    # messages are too close
+                    # messages are nearly identical
                     abuseInc = 1
-            
-            if self.h[uid]["abuse"] < 3: # it is not spam (at least yet)
-                self.h[uid]["lmts"] = now
-                self.h[uid]["lm"] = msg
+
+        # Update last text message (only for text, not image filenames)
+        if has_text and self.h[uid]["abuse"] < 3:
+            self.h[uid]["lm"] = message.content
+
+        # Handle IMAGE-ONLY messages (separate detection from text)
+        if has_image and not has_text:
+            # Track image timestamps for rate limiting
+            if current_channel not in self.h[uid]["image_timestamps"]:
+                self.h[uid]["image_timestamps"][current_channel] = []
+            self.h[uid]["image_timestamps"][current_channel].append(now)
+
+            # Track unique channels where images were posted
+            if current_channel not in self.h[uid]["image_channels"]:
+                self.h[uid]["image_channels"].append(current_channel)
+
+            # Check for cross-channel image spam (3+ channels = immediate kick)
+            if len(self.h[uid]["image_channels"]) >= 3:
+                logger.info(f"Cross-channel image spam detected: {len(self.h[uid]['image_channels'])} channels")
+                abuseInc = 3  # Immediate kick threshold
+
+            # Check for single-channel rate limiting (5+ images in 30 seconds)
+            recent_images = [ts for ts in self.h[uid]["image_timestamps"][current_channel] if now - ts <= 30]
+            self.h[uid]["image_timestamps"][current_channel] = recent_images  # Clean old timestamps
+
+            if len(recent_images) > 5:
+                logger.info(f"Single-channel image spam: {len(recent_images)} images in 30s")
+                # Delete this message (excess image)
+                try:
+                    await message.delete()
+                    self.h[uid]["msgs"].pop()  # Remove from tracking since we deleted it
+                except Exception as e:
+                    logger.warning(f"Could not delete spam image: {e}")
+
+                # Only warn on the 6th image (first excess)
+                if len(recent_images) == 6:
+                    botmsg = await message.channel.send(
+                        f"Hey {message.author.mention}, please slow down with the images! "
+                        "Posting too many images too quickly may result in moderation action."
+                    )
+                    await sleep(6)
+                    try:
+                        await botmsg.delete()
+                    except:
+                        pass
+                    abuseInc = 1  # Add abuse point for rate limit violation
 
         # filter discord invite links no matter what the sift4 distance is
         if len(re.findall(r"(?:https?://)?(www\.)?(?:discord(?:app)?\.(?:gg|io|me|li|com))/(?!channels/)\S{,20}", message.content)):
