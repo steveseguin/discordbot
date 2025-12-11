@@ -174,7 +174,8 @@ class NinjaServices(commands.Cog):
             return
 
         # Check if user is an approver
-        if str(payload.user_id) not in self.bot.config.get("servicesApprovers", []):
+        approvers = self.bot.config.get("servicesApprovers") if self.bot.config.has("servicesApprovers") else []
+        if str(payload.user_id) not in approvers:
             return
 
         # Ignore bot's own reactions
