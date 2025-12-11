@@ -9,3 +9,6 @@ discordbot.cfg
 *.code-workspace
 launch.json
 *.csv
+CLAUDE.md
+AGENTS.md
+.claude/
