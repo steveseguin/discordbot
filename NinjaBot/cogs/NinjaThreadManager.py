@@ -4,6 +4,7 @@ import re
 import discord
 import utils.embedBuilder as embedBuilder
 import utils.ai as ai
+from datetime import datetime, timedelta, timezone
 from discord.ext import commands
 from discord import app_commands
 
@@ -355,8 +356,8 @@ class NinjaThreadManager(commands.Cog):
         channel_name = ""
 
         if isinstance(interaction.channel, discord.Thread):
-            # In a thread: get thread history and use parent channel for context
-            async for msg in interaction.channel.history(limit=20):
+            # In a thread: get full thread history (up to 50 messages)
+            async for msg in interaction.channel.history(limit=50):
                 messages.append({
                     "content": msg.content,
                     "author": {
@@ -369,8 +370,9 @@ class NinjaThreadManager(commands.Cog):
             parent_channel = interaction.channel.parent
             channel_name = parent_channel.name if parent_channel else "thread"
         else:
-            # In a regular channel: get recent channel history for context
-            async for msg in interaction.channel.history(limit=15):
+            # In a regular channel: get recent messages (up to 20, none older than 24 hours)
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
+            async for msg in interaction.channel.history(limit=20, after=cutoff_time):
                 messages.append({
                     "content": msg.content,
                     "author": {
