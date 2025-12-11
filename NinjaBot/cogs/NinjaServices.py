@@ -60,16 +60,10 @@ class ServiceApprovalView(View):
         success = await self.cog.add_service_to_gist(service_data)
 
         if success:
-            # Update the original embed to show approved
-            new_embed = embed.copy()
-            new_embed.color = 0x00C853  # Green
-            new_embed.set_footer(text=f"✅ Approved by {interaction.user.display_name} on {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-            await original_message.edit(embed=new_embed)
-
-            # Disable buttons on the bot's reply message
+            # Disable buttons and update the bot's reply message to show approved
             for item in self.children:
                 item.disabled = True
-            await message.edit(view=self)
+            await message.edit(content=f"✅ **Approved** by {interaction.user.display_name}", view=self)
 
             await interaction.followup.send(f"Service listing for **{service_data.get('name', 'Unknown')}** has been approved and published!", ephemeral=True)
 
@@ -108,16 +102,10 @@ class ServiceApprovalView(View):
 
         embed = original_message.embeds[0]
 
-        # Update the original embed to show rejected
-        new_embed = embed.copy()
-        new_embed.color = 0xD50000  # Red
-        new_embed.set_footer(text=f"❌ Rejected by {interaction.user.display_name} on {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-        await original_message.edit(embed=new_embed)
-
-        # Disable buttons on the bot's reply message
+        # Disable buttons and update the bot's reply message to show rejected
         for item in self.children:
             item.disabled = True
-        await message.edit(view=self)
+        await message.edit(content=f"❌ **Rejected** by {interaction.user.display_name}", view=self)
 
         await interaction.response.send_message("Submission rejected.", ephemeral=True)
 
