@@ -2,7 +2,6 @@ import discord
 import asyncio
 import logging
 import pathlib
-import discord
 import discord.ext.commands
 import logging.handlers
 from discord.ext import commands
@@ -99,6 +98,8 @@ class NinjaBot(commands.Bot):
         await self.load_extension("cogs.NinjaUpdates")
         # auto-thread manager
         await self.load_extension("cogs.NinjaThreadManager")
+        # freelancer services marketplace
+        await self.load_extension("cogs.NinjaServices")
 
         # takes care of pushing all application commands to discord
         guild = int(self.config.get("guild"))

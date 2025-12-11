@@ -1,4 +1,6 @@
 import logging
+import asyncio
+import functools
 import googleapiclient.discovery
 from discord.ext import commands, tasks
 from asyncio import sleep
@@ -26,7 +28,9 @@ class NinjaYoutube(commands.Cog):
                 safeSearch="none",
                 type="video"
             )
-            response = request.execute()
+            # Run blocking API call in executor to avoid freezing the bot
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(None, request.execute)
 
             if response and response["kind"] == "youtube#searchListResponse" and "items" in response and response["items"]:
                 postedVideos = self.bot.config.get("youtubePostedVideo") or []

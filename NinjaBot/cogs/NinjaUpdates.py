@@ -38,11 +38,14 @@ class NinjaUpdates(commands.Cog):
                     if resp.status == 200 and "files" in gistApiData and "updates.json" in gistApiData["files"]:
                         raw_url = gistApiData["files"]["updates.json"]["raw_url"]
                     else:
+                        logger.error(f"Failed to fetch gist API: HTTP {resp.status}, has files: {'files' in gistApiData}")
                         return
 
                 # fetch gist data
                 async with self.http.get(raw_url) as resp:
-                    if resp.status != 200: return
+                    if resp.status != 200:
+                        logger.error(f"Failed to fetch gist content: HTTP {resp.status}")
+                        return
                     gistContent = await resp.json(content_type=None)
                     # we rely on the file beeing there and having content
                     # this is to not clear it in case download fails

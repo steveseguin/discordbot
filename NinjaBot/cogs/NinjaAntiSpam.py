@@ -153,6 +153,7 @@ class NinjaAntiSpam(commands.Cog):
                 spamChannel = self.bot.get_channel(chid)
                 msg = await spamChannel.fetch_message(mid)
                 # text message beats attachments
+                line = f"{msg.channel.name}: (no content)"
                 if msg.attachments:
                     line = f"{msg.channel.name}: {msg.attachments[0].filename} <{msg.attachments[0].url}>"
                 if msg.content:
