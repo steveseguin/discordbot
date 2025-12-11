@@ -16,10 +16,12 @@ A comprehensive Discord bot for the [VDO.Ninja community](https://discord.vdo.ni
 - **Update Channel**: Posts from the Discord #update channel are automatically published to [updates.vdo.ninja](https://updates.vdo.ninja)
 - **YouTube Monitoring**: Automatically posts new videos from specified YouTube channels
 - **Reddit Integration**: Posts new content from r/VDONinja subreddit
+- **Freelancer Services**: Approval-based system for managing a directory of community freelancers
 
 ### Administration
 - **Thread Management**: Automatically creates, renames, and archives threads
 - **Support Staff Tools**: Login/logout system for support staff to receive notifications
+- **Services Moderation**: Approve/reject freelancer submissions with button-based workflow
 
 ## Installation
 
@@ -78,17 +80,58 @@ The bot requires several API keys and configuration options. Copy the sample con
 2. Add to `discordbot.cfg` as `githubApiKey`
 
 ### AI Integration (Optional)
-The bot supports multiple AI providers for enhanced support capabilities:
+The bot supports multiple AI providers for enhanced support capabilities. When enabled, the bot can automatically respond to questions in configured channels.
+
 ```json
+"aiEnabledChannels": ["CHANNEL_ID"],
 "ai": {
     "enabled": true,
-    "service": "GEMINI",  // Options: OPENAI, GEMINI, OLLAMA
+    "service": "GEMINI",
     "api_key": "YOUR_API_KEY",
-    "model": "gemini-2.0-flash",  // Adjust based on service
+    "model": "gemini-2.0-flash",
     "temperature": 0.7,
-    "max_tokens": 1000
+    "max_tokens": 1500,
+    "api_url": ""
 }
 ```
+
+**Supported AI Services:**
+- `GEMINI` - Google's Gemini API (recommended: `gemini-2.0-flash`)
+- `OPENAI` - OpenAI API (models like `gpt-4`, `gpt-3.5-turbo`)
+- `OLLAMA` - Self-hosted Ollama (set `api_url` to your Ollama endpoint)
+
+**Channel-Specific Instructions:**
+You can customize the AI's behavior per channel using `channelInstructions`:
+```json
+"channelInstructions": {
+    "SUPPORT_CHANNEL_ID": "You are helping in #support. Focus on troubleshooting...",
+    "BUG_REPORTS_CHANNEL_ID": "You are helping in #bug-reports..."
+}
+```
+
+### Freelancer Services Integration (Optional)
+The bot can manage a freelancer services directory with an approval workflow:
+
+1. Users submit their service via a web form that posts to a Discord webhook
+2. Submissions appear in a private review channel with Approve/Reject buttons
+3. Approved services are saved to a GitHub Gist and announced publicly
+
+```json
+"servicesChannel": "PRIVATE_REVIEW_CHANNEL_ID",
+"servicesAnnounceChannel": "PUBLIC_ANNOUNCE_CHANNEL_ID",
+"servicesGistId": "YOUR_GIST_ID",
+"servicesApprovers": ["APPROVER_USER_ID"]
+```
+
+**Setup:**
+1. Create a GitHub Gist with a `services.json` file (can be empty `{}` initially)
+2. Create a Discord webhook pointing to your review channel
+3. Add approver user IDs to `servicesApprovers`
+4. The services page reads from the Gist to display approved listings
+
+**Slash Commands:**
+- `/listservices` - View all approved service listings
+- `/removeservice <discord_username>` - Remove a listing (approvers only)
 
 ## Production Deployment
 

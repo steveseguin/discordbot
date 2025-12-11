@@ -149,10 +149,10 @@ class NinjaServices(commands.Cog):
         if not embed.title or "Submission" not in embed.title:
             return
 
-        # Add the approval buttons
+        # Reply with approval buttons (can't edit webhook messages)
         try:
             view = ServiceApprovalView(self)
-            await message.edit(view=view)
+            await message.reply(content="**Review this submission:**", view=view, mention_author=False)
             logger.info(f"Added approval buttons to service submission from webhook")
         except Exception as e:
             logger.exception(f"Error adding approval buttons: {e}")
