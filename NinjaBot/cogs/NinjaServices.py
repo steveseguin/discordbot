@@ -5,10 +5,96 @@ import aiohttp
 import json
 from discord.ext import commands
 from discord import app_commands
+from discord.ui import View, Button
 from datetime import datetime
 import uuid
 
 logger = logging.getLogger("NinjaBot." + __name__)
+
+
+class ServiceApprovalView(View):
+    """Buttons for approving/rejecting service submissions"""
+
+    def __init__(self, cog):
+        super().__init__(timeout=None)  # Persistent view - no timeout
+        self.cog = cog
+
+    @discord.ui.button(label="Approve", style=discord.ButtonStyle.green, custom_id="service_approve", emoji="✅")
+    async def approve_button(self, interaction: discord.Interaction, button: Button):
+        """Handle approve button click"""
+        # Check if user is an approved reviewer
+        if str(interaction.user.id) not in self.cog.bot.config.get("servicesApprovers", []):
+            await interaction.response.send_message("You don't have permission to approve listings.", ephemeral=True)
+            return
+
+        # Get the original message with the embed
+        message = interaction.message
+        if not message or not message.embeds:
+            await interaction.response.send_message("Could not find submission data.", ephemeral=True)
+            return
+
+        embed = message.embeds[0]
+
+        # Parse the submission
+        service_data = self.cog.parse_submission_embed(embed)
+        if not service_data:
+            await interaction.response.send_message("Could not parse submission data.", ephemeral=True)
+            return
+
+        await interaction.response.defer()
+
+        # Add to Gist
+        success = await self.cog.add_service_to_gist(service_data)
+
+        if success:
+            # Update the embed to show approved
+            new_embed = embed.copy()
+            new_embed.color = 0x00C853  # Green
+            new_embed.set_footer(text=f"✅ Approved by {interaction.user.display_name} on {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+            # Disable buttons
+            for item in self.children:
+                item.disabled = True
+
+            await message.edit(embed=new_embed, view=self)
+            await interaction.followup.send(f"Service listing for **{service_data.get('name', 'Unknown')}** has been approved and published!", ephemeral=True)
+
+            # Announce in public channel
+            await self.cog.announce_service(service_data)
+
+            logger.info(f"Approved service listing: {service_data.get('name')} by {interaction.user.display_name}")
+        else:
+            await interaction.followup.send("Error: Could not publish service listing. Check bot logs.", ephemeral=True)
+
+    @discord.ui.button(label="Reject", style=discord.ButtonStyle.red, custom_id="service_reject", emoji="❌")
+    async def reject_button(self, interaction: discord.Interaction, button: Button):
+        """Handle reject button click"""
+        # Check if user is an approved reviewer
+        if str(interaction.user.id) not in self.cog.bot.config.get("servicesApprovers", []):
+            await interaction.response.send_message("You don't have permission to reject listings.", ephemeral=True)
+            return
+
+        message = interaction.message
+        if not message or not message.embeds:
+            await interaction.response.send_message("Could not find submission data.", ephemeral=True)
+            return
+
+        embed = message.embeds[0]
+
+        # Update the embed to show rejected
+        new_embed = embed.copy()
+        new_embed.color = 0xD50000  # Red
+        new_embed.set_footer(text=f"❌ Rejected by {interaction.user.display_name} on {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+        # Disable buttons
+        for item in self.children:
+            item.disabled = True
+
+        await message.edit(embed=new_embed, view=self)
+        await interaction.response.send_message("Submission rejected.", ephemeral=True)
+
+        logger.info(f"Rejected service listing by {interaction.user.display_name}")
+
 
 class NinjaServices(commands.Cog):
     """
@@ -17,7 +103,7 @@ class NinjaServices(commands.Cog):
     Workflow:
     1. User submits form on socialstream.ninja/docs/services.html
     2. Form POSTs to Discord webhook -> arrives in private review channel (servicesChannel)
-    3. Admin reacts with checkmark emoji to approve
+    3. Admin clicks Approve/Reject button
     4. Bot updates GitHub Gist with approved service listing
     5. Bot announces the approved listing in public channel (servicesAnnounceChannel)
     6. Services page reads from Gist and displays approved listings
@@ -30,90 +116,46 @@ class NinjaServices(commands.Cog):
         self.http = aiohttp.ClientSession()
         # Lock to prevent race conditions on gist updates
         self.gist_lock = asyncio.Lock()
-        # Emoji for approval (green checkmark)
-        self.approve_emoji = "\u2705"  # ✅
-        # Emoji for rejection (red X)
-        self.reject_emoji = "\u274C"  # ❌
+        # Register persistent view
+        self.approval_view = ServiceApprovalView(self)
+        bot.add_view(self.approval_view)
 
     def cog_check(self, ctx) -> bool:
         """Only allow commands in guild context"""
         return ctx.guild is not None
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
-        """Listen for approval reactions on service submissions"""
+    async def on_message(self, message: discord.Message) -> None:
+        """Listen for webhook messages in the services channel and add approval buttons"""
 
         # Check if services feature is configured
-        if not self.bot.config.has("servicesChannel") \
-            or not self.bot.config.has("servicesGistId") \
-            or not self.bot.config.has("githubApiKey") \
-            or not self.bot.config.has("servicesApprovers"):
+        if not self.bot.config.has("servicesChannel"):
             return
 
-        # Check if reaction is in the services channel
-        if payload.channel_id != int(self.bot.config.get("servicesChannel")):
+        # Check if message is in the services channel
+        if message.channel.id != int(self.bot.config.get("servicesChannel")):
             return
 
-        # Check if user is an approved reviewer
-        if str(payload.user_id) not in self.bot.config.get("servicesApprovers"):
-            return
-
-        # Check if it's the approval emoji
-        if str(payload.emoji) != self.approve_emoji:
-            return
-
-        # Fetch the message
-        channel = self.bot.get_channel(payload.channel_id)
-        if not channel:
-            return
-
-        try:
-            message = await channel.fetch_message(payload.message_id)
-        except discord.NotFound:
-            logger.warning(f"Message {payload.message_id} not found for approval")
-            return
-        except Exception as e:
-            logger.exception(f"Error fetching message for approval: {e}")
-            return
-
-        # Check if it's a webhook message (service submission)
+        # Check if it's a webhook message
         if not message.webhook_id:
             return
 
-        # Check if message has embeds (our submission format)
+        # Check if it has embeds (our submission format)
         if not message.embeds:
             return
 
+        # Check if it looks like a service submission (has the right fields)
         embed = message.embeds[0]
-
-        # Parse the submission from embed fields
-        service_data = self.parse_submission_embed(embed)
-        if not service_data:
-            logger.warning("Could not parse service submission embed")
+        if not embed.title or "Submission" not in embed.title:
             return
 
-        # Add to the Gist
-        success = await self.add_service_to_gist(service_data)
-
-        # React and reply with error handling
+        # Add the approval buttons
         try:
-            if success:
-                # Add a checkmark reaction to confirm
-                await message.add_reaction("\U0001F4BE")  # Floppy disk emoji to show saved
-                # Reply to confirm in the review channel
-                await message.reply(f"Service listing for **{service_data.get('name', 'Unknown')}** has been approved and published!", mention_author=False)
-                logger.info(f"Approved service listing: {service_data.get('name')}")
-
-                # Announce in public channel if configured
-                await self.announce_service(service_data)
-            else:
-                await message.reply("Error: Could not publish service listing. Check bot logs.", mention_author=False)
-        except discord.NotFound:
-            logger.warning("Message was deleted before we could reply")
-        except discord.Forbidden:
-            logger.warning("Bot lacks permission to react or reply")
+            view = ServiceApprovalView(self)
+            await message.edit(view=view)
+            logger.info(f"Added approval buttons to service submission from webhook")
         except Exception as e:
-            logger.exception(f"Error reacting/replying to approval: {e}")
+            logger.exception(f"Error adding approval buttons: {e}")
 
     async def announce_service(self, service_data: dict) -> None:
         """Announce an approved service listing in the public channel"""
