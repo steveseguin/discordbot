@@ -23,7 +23,8 @@ class ServiceApprovalView(View):
     async def approve_button(self, interaction: discord.Interaction, button: Button):
         """Handle approve button click"""
         # Check if user is an approved reviewer
-        if str(interaction.user.id) not in self.cog.bot.config.get("servicesApprovers", []):
+        approvers = self.cog.bot.config.get("servicesApprovers") if self.cog.bot.config.has("servicesApprovers") else []
+        if str(interaction.user.id) not in approvers:
             await interaction.response.send_message("You don't have permission to approve listings.", ephemeral=True)
             return
 
@@ -70,7 +71,8 @@ class ServiceApprovalView(View):
     async def reject_button(self, interaction: discord.Interaction, button: Button):
         """Handle reject button click"""
         # Check if user is an approved reviewer
-        if str(interaction.user.id) not in self.cog.bot.config.get("servicesApprovers", []):
+        approvers = self.cog.bot.config.get("servicesApprovers") if self.cog.bot.config.has("servicesApprovers") else []
+        if str(interaction.user.id) not in approvers:
             await interaction.response.send_message("You don't have permission to reject listings.", ephemeral=True)
             return
 
@@ -345,6 +347,14 @@ class NinjaServices(commands.Cog):
                     # Parse payment URLs
                     if value and value != "None":
                         service["paymentLinks"] = [url.strip() for url in value.split("\n") if url.strip() and url.strip() != "None"]
+                elif name == "discord id":
+                    # Store Discord user ID for avatar display
+                    if value and value != "None":
+                        service["discordId"] = value.strip()
+                elif name == "avatar url":
+                    # Store Discord avatar URL
+                    if value and value != "None":
+                        service["avatarUrl"] = value.strip()
 
             # Validate required fields
             if not service.get("name") or not service.get("discord") or not service.get("description"):
