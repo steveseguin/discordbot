@@ -157,6 +157,74 @@ class NinjaServices(commands.Cog):
         except Exception as e:
             logger.exception(f"Error adding approval buttons: {e}")
 
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent) -> None:
+        """Fallback: Allow approving submissions via checkmark reaction on the original webhook message"""
+
+        # Check if services feature is configured
+        if not self.bot.config.has("servicesChannel"):
+            return
+
+        # Check if reaction is in the services channel
+        if payload.channel_id != int(self.bot.config.get("servicesChannel")):
+            return
+
+        # Check if it's a checkmark or X reaction
+        if str(payload.emoji) not in ["✅", "❌"]:
+            return
+
+        # Check if user is an approver
+        if str(payload.user_id) not in self.bot.config.get("servicesApprovers", []):
+            return
+
+        # Ignore bot's own reactions
+        if payload.user_id == self.bot.user.id:
+            return
+
+        try:
+            channel = self.bot.get_channel(payload.channel_id)
+            if not channel:
+                return
+
+            message = await channel.fetch_message(payload.message_id)
+            if not message or not message.embeds:
+                return
+
+            embed = message.embeds[0]
+
+            # Check if it looks like a service submission
+            if not embed.title or "Submission" not in embed.title:
+                return
+
+            # Check if already processed (has footer indicating approval/rejection)
+            if embed.footer and embed.footer.text and ("Approved" in embed.footer.text or "Rejected" in embed.footer.text):
+                return
+
+            user = self.bot.get_user(payload.user_id) or await self.bot.fetch_user(payload.user_id)
+
+            if str(payload.emoji) == "✅":
+                # Approve
+                service_data = self.parse_submission_embed(embed)
+                if not service_data:
+                    logger.warning("Could not parse submission from reaction approval")
+                    return
+
+                success = await self.add_service_to_gist(service_data)
+                if success:
+                    await self.announce_service(service_data)
+                    await channel.send(f"✅ **{service_data.get('name', 'Unknown')}** approved by {user.display_name} (via reaction)")
+                    logger.info(f"Approved service listing via reaction: {service_data.get('name')} by {user.display_name}")
+                else:
+                    await channel.send(f"❌ Error approving service listing. Check bot logs.")
+
+            elif str(payload.emoji) == "❌":
+                # Reject
+                await channel.send(f"❌ Submission rejected by {user.display_name} (via reaction)")
+                logger.info(f"Rejected service listing via reaction by {user.display_name}")
+
+        except Exception as e:
+            logger.exception(f"Error processing reaction approval: {e}")
+
     async def announce_service(self, service_data: dict) -> None:
         """Announce an approved service listing in the public channel"""
         if not self.bot.config.has("servicesAnnounceChannel"):
