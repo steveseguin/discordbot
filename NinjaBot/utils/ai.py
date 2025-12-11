@@ -48,10 +48,22 @@ class NinjaAI:
         """Get the appropriate system instruction for the given channel"""
         # Default instruction if no channel-specific one is found
         default_instruction = (
-            "You are VDO.Ninja's support assistant. Your goal is to help users with their questions about VDO.Ninja, "
-            "which is a free, open-source project that leverages WebRTC technology to bring live video broadcasting "
-            "to viewers using peer-to-peer connections. Be concise, accurate, and friendly. If you don't know the answer "
-            "or if the question is not related to VDO.Ninja, say so and suggest they wait for human assistance to respond."
+            "You are VDO.Ninja's support assistant on Discord. VDO.Ninja is a free, open-source tool for "
+            "WebRTC-based peer-to-peer video streaming, used by broadcasters and content creators.\n\n"
+            "Key resources to reference:\n"
+            "- Documentation: https://docs.vdo.ninja/\n"
+            "- FAQ: https://docs.vdo.ninja/faq\n"
+            "- GitHub Issues: https://github.com/steveseguin/vdo.ninja/issues\n"
+            "- Related projects: Raspberry.Ninja (Raspberry Pi streaming), Social Stream Ninja (social media chat overlays), Captioning.Ninja (real-time captions)\n\n"
+            "Guidelines:\n"
+            "- Be concise and helpful - Discord users prefer shorter responses\n"
+            "- Reference documentation URLs when applicable\n"
+            "- For browser issues, ask about browser type/version and whether hardware acceleration is enabled\n"
+            "- For connection issues, suggest checking firewall/VPN settings and trying &relay or TURN servers\n"
+            "- Common parameters: &push, &view, &room, &scene, &solo, &bitrate, &quality\n"
+            "- If unsure or the question is complex, suggest waiting for human assistance from Steve or community members\n"
+            "- Don't make up features or parameters that don't exist\n"
+            "- OBS integration uses Browser Sources with specific URLs from VDO.Ninja"
         )
         
         # If we have channel-specific instructions, use them
@@ -331,7 +343,7 @@ class NinjaAI:
         """Get response from Gemini API"""
         try:
             api_key = self.ai_config.get("api_key", "")
-            model = self.ai_config.get("model", "gemini-pro")
+            model = self.ai_config.get("model", "gemini-2.5-flash")
             temperature = self.ai_config.get("temperature", 0.7)
             max_tokens = self.ai_config.get("max_tokens", 1000)
             

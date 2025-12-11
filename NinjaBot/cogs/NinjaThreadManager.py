@@ -340,52 +340,70 @@ class NinjaThreadManager(commands.Cog):
 
     @app_commands.command()
     @app_commands.guild_only()
-    @app_commands.checks.has_permissions(manage_messages=True)
-    # limiting it to only mods is enough for now. if made public this needs a:
-    # @app_commands.checks.cooldown()
+    @app_commands.checks.cooldown(1, 30.0)  # 1 use per 30 seconds per user
     async def ask(self, interaction: discord.Interaction, question: str) -> None:
-        """Get an AI-generated answer to a question"""
-        if not isinstance(interaction.channel, discord.Thread):
-            await interaction.response.send_message("This command can only be used in threads", ephemeral=True)
-            # TODO: Ignore history if the current channel is not a thread
-            return
-            
+        """Get an AI-generated answer to a question about VDO.Ninja"""
         if not self.ai:
             await interaction.response.send_message("AI support is not available at the moment", ephemeral=True)
             return
-            
+
         await interaction.response.defer()
-        
-        # Get thread history for context
+
+        # Get context based on channel type
         messages = []
-        async for msg in interaction.channel.history(limit=20):
-            messages.append({
-                "content": msg.content,
-                "author": {
-                    "id": msg.author.id,
-                    "bot": msg.author.bot
-                }
-            })
-        messages.reverse()  # Oldest first
-        
-        # Add the current question
+        channel_id_str = ""
+        channel_name = ""
+
+        if isinstance(interaction.channel, discord.Thread):
+            # In a thread: get thread history and use parent channel for context
+            async for msg in interaction.channel.history(limit=20):
+                messages.append({
+                    "content": msg.content,
+                    "author": {
+                        "id": msg.author.id,
+                        "bot": msg.author.bot
+                    }
+                })
+            messages.reverse()  # Oldest first
+            channel_id_str = str(interaction.channel.parent_id)
+            parent_channel = interaction.channel.parent
+            channel_name = parent_channel.name if parent_channel else "thread"
+        else:
+            # In a regular channel: get recent channel history for context
+            async for msg in interaction.channel.history(limit=15):
+                messages.append({
+                    "content": msg.content,
+                    "author": {
+                        "id": msg.author.id,
+                        "bot": msg.author.bot
+                    }
+                })
+            messages.reverse()  # Oldest first
+            channel_id_str = str(interaction.channel.id)
+            channel_name = interaction.channel.name if hasattr(interaction.channel, 'name') else "channel"
+
+        # Add channel context to the question
+        context_note = f"[User is asking in #{channel_name}]"
+
+        # Add the current question with context
         messages.append({
-            "content": question,
+            "content": f"{context_note}\n\nQuestion: {question}",
             "author": {
                 "id": interaction.user.id,
                 "bot": False
             }
         })
-        
+
         # Get AI response with channel context
-        channel_id_str = str(interaction.channel.parent_id)  # Parent channel of the thread
         ai_response = await self.ai.get_ai_response(messages, channel_id_str)
-        
+
         if ai_response:
             embed = embedBuilder.ninjaEmbed(description=ai_response)
+            # Determine thread owner for button permissions
+            thread_owner_id = interaction.channel.owner_id if isinstance(interaction.channel, discord.Thread) else interaction.user.id
             await interaction.followup.send(
                 embed=embed,
-                view=AIReplyButtons(self, interaction.channel.owner_id)
+                view=AIReplyButtons(self, thread_owner_id)
             )
         else:
             await interaction.followup.send("Sorry, I couldn't generate a response. Please try again or wait for human assistance.")
