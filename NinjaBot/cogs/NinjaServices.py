@@ -231,8 +231,15 @@ class NinjaServices(commands.Cog):
                 elif name == "description":
                     service["description"] = value
                 elif name == "platforms":
-                    # Parse platforms list
-                    service["platforms"] = [p.strip() for p in value.split(",")]
+                    # Parse platforms list and normalize to short codes
+                    platforms = []
+                    for p in value.split(","):
+                        p = p.strip().lower()
+                        if "social stream" in p or p == "ssn":
+                            platforms.append("ssn")
+                        elif "vdo" in p:
+                            platforms.append("vdo")
+                    service["platforms"] = platforms
                 elif name == "service types" or name == "services":
                     # Parse service types list
                     service["serviceTypes"] = [s.strip() for s in value.split(",")]
