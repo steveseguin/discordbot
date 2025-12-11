@@ -169,8 +169,8 @@ class NinjaBot(commands.Bot):
             await interaction.response.send_message(str(err), ephemeral=True)
         elif isinstance(err, discord.app_commands.CheckFailure):
             # log check failures
-            logger.info(f"user '{interaction.user.display_name}' tried to run '\
-                        '{getattr(interaction.command, "qualified_name", "Unknown interaction")}' but '{err}'")
+            logger.info(f"user '{interaction.user.display_name}' tried to run "
+                        f"'{getattr(interaction.command, 'qualified_name', 'Unknown interaction')}' but '{err}'")
             # inform user of their poor choice
             await interaction.response.send_message("You cannot run this command here", ephemeral=True)
         else:

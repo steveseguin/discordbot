@@ -16,10 +16,11 @@ class NinjaServices(commands.Cog):
 
     Workflow:
     1. User submits form on socialstream.ninja/docs/services.html
-    2. Form POSTs to Discord webhook -> arrives in services channel
+    2. Form POSTs to Discord webhook -> arrives in private review channel (servicesChannel)
     3. Admin reacts with checkmark emoji to approve
     4. Bot updates GitHub Gist with approved service listing
-    5. Services page reads from Gist and displays approved listings
+    5. Bot announces the approved listing in public channel (servicesAnnounceChannel)
+    6. Services page reads from Gist and displays approved listings
     """
 
     def __init__(self, bot) -> None:
@@ -99,9 +100,12 @@ class NinjaServices(commands.Cog):
             if success:
                 # Add a checkmark reaction to confirm
                 await message.add_reaction("\U0001F4BE")  # Floppy disk emoji to show saved
-                # Reply to confirm
+                # Reply to confirm in the review channel
                 await message.reply(f"Service listing for **{service_data.get('name', 'Unknown')}** has been approved and published!", mention_author=False)
                 logger.info(f"Approved service listing: {service_data.get('name')}")
+
+                # Announce in public channel if configured
+                await self.announce_service(service_data)
             else:
                 await message.reply("Error: Could not publish service listing. Check bot logs.", mention_author=False)
         except discord.NotFound:
@@ -110,6 +114,61 @@ class NinjaServices(commands.Cog):
             logger.warning("Bot lacks permission to react or reply")
         except Exception as e:
             logger.exception(f"Error reacting/replying to approval: {e}")
+
+    async def announce_service(self, service_data: dict) -> None:
+        """Announce an approved service listing in the public channel"""
+        if not self.bot.config.has("servicesAnnounceChannel"):
+            return
+
+        try:
+            announce_channel_id = int(self.bot.config.get("servicesAnnounceChannel"))
+            announce_channel = self.bot.get_channel(announce_channel_id)
+
+            if not announce_channel:
+                logger.warning(f"Could not find announce channel {announce_channel_id}")
+                return
+
+            # Build announcement embed
+            embed = discord.Embed(
+                title=f"New Freelancer: {service_data.get('name', 'Unknown')}",
+                description=service_data.get('description', '')[:500],
+                color=0x77B255,
+                url="https://socialstream.ninja/docs/services.html"
+            )
+
+            # Add platforms
+            platforms = service_data.get('platforms', [])
+            if platforms:
+                platform_str = ", ".join(platforms)
+                embed.add_field(name="Platforms", value=platform_str, inline=True)
+
+            # Add service types
+            service_types = service_data.get('serviceTypes', [])
+            if service_types:
+                types_str = ", ".join(service_types[:5])
+                embed.add_field(name="Services", value=types_str, inline=True)
+
+            # Add Discord contact
+            discord_user = service_data.get('discord', '')
+            if discord_user:
+                embed.add_field(name="Discord", value=discord_user, inline=True)
+
+            # Add social links
+            socials = service_data.get('socials', {})
+            if socials:
+                social_links = []
+                for platform, url in list(socials.items())[:3]:
+                    social_links.append(f"[{platform.title()}]({url})")
+                if social_links:
+                    embed.add_field(name="Links", value=" | ".join(social_links), inline=False)
+
+            embed.set_footer(text="View all services at socialstream.ninja/docs/services.html")
+
+            await announce_channel.send(embed=embed)
+            logger.info(f"Announced service listing for {service_data.get('name')} in channel {announce_channel_id}")
+
+        except Exception as e:
+            logger.exception(f"Error announcing service: {e}")
 
     def parse_submission_embed(self, embed: discord.Embed) -> dict:
         """Parse a Discord embed from the submission webhook into service data"""
