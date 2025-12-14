@@ -10,6 +10,21 @@ from strsimpy import SIFT4
 
 logger = logging.getLogger("NinjaBot." + __name__)
 
+# Regex pattern for common image hosting URLs
+IMAGE_URL_PATTERN = re.compile(
+    r'(?:https?://)?(?:www\.)?'
+    r'(?:'
+    r'(?:i\.)?imgur\.com/\w+|'
+    r'giphy\.com/\w+|'
+    r'i\.redd\.it/\w+|'
+    r'media\.discordapp\.net/attachments/|'
+    r'cdn\.discordapp\.com/attachments/|'
+    r'tenor\.com/\w+|'
+    r'gfycat\.com/\w+'
+    r')',
+    re.IGNORECASE
+)
+
 class NinjaAntiSpam(commands.Cog):
     def __init__(self, bot) -> None:
         logger.debug(f"Loading {self.__class__.__name__}")
@@ -26,11 +41,17 @@ class NinjaAntiSpam(commands.Cog):
         if message.author == self.bot.user \
             or message.author.bot \
             or isinstance(message.channel, discord.DMChannel) \
-            or (hasattr(message.author, "roles") and discord.utils.get(getattr(message.author, "roles"), name="Moderator")) \
             or not (message.type == discord.MessageType.default \
             or message.type == discord.MessageType.reply):
-            # ignore messages by bots, moderators and system messages
+            # ignore messages by bots, DMs, and system messages
             return
+
+        # Check for protected roles (skip anti-spam for trusted members)
+        protected_roles = {"Steve", "Admin", "Moderator", "Sponsor"}
+        if hasattr(message.author, "roles"):
+            author_role_names = {role.name for role in message.author.roles}
+            if protected_roles & author_role_names:  # intersection - any match
+                return
     
         now = datetime.now().timestamp()
         uid = message.author.id
@@ -57,7 +78,9 @@ class NinjaAntiSpam(commands.Cog):
 
         # Determine if this is an image-only message or has text
         has_text = bool(message.content)
-        has_image = bool(message.attachments)
+        has_attachment = bool(message.attachments)
+        has_image_url = bool(IMAGE_URL_PATTERN.search(message.content)) if message.content else False
+        has_image = has_attachment or has_image_url
 
         # Handle TEXT messages (use SIFT4 similarity for cross-channel text spam)
         if has_text and uid in self.h and self.h[uid]["lm"]:
@@ -78,12 +101,23 @@ class NinjaAntiSpam(commands.Cog):
                     # messages are nearly identical
                     abuseInc = 1
 
+        # Cross-channel rapid posting detection (independent of content similarity)
+        # Track all channels user has posted to
+        if current_channel not in self.h[uid]["channels"]:
+            self.h[uid]["channels"].append(current_channel)
+
+        # If user posts to 3+ channels within the tracking window, flag as spam
+        if len(self.h[uid]["channels"]) >= 3:
+            logger.info(f"Cross-channel spam detected: {len(self.h[uid]['channels'])} channels by user {message.author}")
+            abuseInc = max(abuseInc, 3)  # Immediate kick threshold
+
         # Update last text message (only for text, not image filenames)
         if has_text and self.h[uid]["abuse"] < 3:
             self.h[uid]["lm"] = message.content
 
-        # Handle IMAGE-ONLY messages (separate detection from text)
-        if has_image and not has_text:
+        # Handle IMAGE messages (attachments or image URLs)
+        # For image URLs, we still track them even though they have text content
+        if has_image:
             # Track image timestamps for rate limiting
             if current_channel not in self.h[uid]["image_timestamps"]:
                 self.h[uid]["image_timestamps"][current_channel] = []
@@ -96,7 +130,7 @@ class NinjaAntiSpam(commands.Cog):
             # Check for cross-channel image spam (3+ channels = immediate kick)
             if len(self.h[uid]["image_channels"]) >= 3:
                 logger.info(f"Cross-channel image spam detected: {len(self.h[uid]['image_channels'])} channels")
-                abuseInc = 3  # Immediate kick threshold
+                abuseInc = max(abuseInc, 3)  # Immediate kick threshold
 
             # Check for single-channel rate limiting (5+ images in 30 seconds)
             recent_images = [ts for ts in self.h[uid]["image_timestamps"][current_channel] if now - ts <= 30]
