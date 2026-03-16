@@ -2,7 +2,6 @@
 import logging
 import re
 import discord
-import aiohttp
 import utils.embedBuilder as embedBuilder
 import utils.ai as ai
 from datetime import datetime, timedelta, timezone
@@ -93,7 +92,6 @@ class NinjaThreadManager(commands.Cog):
         self.bot = bot
         self.isInternal = True
         self.ai = ai.NinjaAI(bot)
-        self.http = aiohttp.ClientSession()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -314,22 +312,17 @@ class NinjaThreadManager(commands.Cog):
         if not interaction.channel.archived: await interaction.channel.edit(archived=True, reason="NinjaBot")
 
     async def _askBot(self, interaction) -> None:
-        """Trigger StevesBot's interactive triage flow in the current thread."""
+        """Trigger StevesBot's interactive triage flow via Discord mention."""
         if not isinstance(interaction.channel, discord.Thread):
             await interaction.response.send_message("This can only be used in a thread.", ephemeral=True)
             return
 
-        api_url = self.bot.config.get("stevesbotApiUrl") if self.bot.config.has("stevesbotApiUrl") else None
-        if not api_url:
+        stevesbot_user_id = self.bot.config.get("stevesbotUserId") if self.bot.config.has("stevesbotUserId") else None
+        if not stevesbot_user_id:
             await interaction.response.send_message("Support bot is not configured.", ephemeral=True)
             return
 
         await interaction.response.defer(ephemeral=True)
-
-        # Determine product from parent channel mapping
-        channel_products = self.bot.config.get("stevesbotChannelProducts") if self.bot.config.has("stevesbotChannelProducts") else {}
-        parent_id = str(interaction.channel.parent_id) if interaction.channel.parent_id else ""
-        preselected_product = channel_products.get(parent_id)
 
         # Use the thread starter message ID as trigger, fall back to thread ID
         try:
@@ -338,32 +331,21 @@ class NinjaThreadManager(commands.Cog):
         except Exception:
             trigger_message_id = str(interaction.channel.id)
 
-        payload = {
-            "channelId": str(interaction.channel.id),
-            "userId": str(interaction.user.id),
-            "triggerMessageId": trigger_message_id,
-        }
-        if preselected_product:
-            payload["preselectedProduct"] = preselected_product
+        # Send a mention message that StevesBot will detect and act on.
+        # StevesBot will delete this message after processing and send the triage prompt.
+        mention = f"<@{stevesbot_user_id}>"
+        command = f"{mention} !start-triage user={interaction.user.id} trigger={trigger_message_id}"
 
         try:
-            async with self.http.post(f"{api_url}/api/start-triage", json=payload) as resp:
-                if resp.status == 200:
-                    await interaction.followup.send(
-                        "🤖 The support bot is now active! Follow the prompts below to get help.",
-                        ephemeral=True,
-                    )
-                else:
-                    error_text = await resp.text()
-                    logger.warning(f"StevesBot API returned {resp.status}: {error_text}")
-                    await interaction.followup.send(
-                        "Sorry, the support bot is unavailable right now. Please wait for human assistance.",
-                        ephemeral=True,
-                    )
-        except Exception as e:
-            logger.exception(f"Error calling StevesBot API: {e}")
+            await interaction.channel.send(command)
             await interaction.followup.send(
-                "Sorry, the support bot is unavailable right now. Please wait for human assistance.",
+                "The support bot has been notified! Follow the prompts below to get help.",
+                ephemeral=True,
+            )
+        except Exception as e:
+            logger.exception(f"Error sending StevesBot mention: {e}")
+            await interaction.followup.send(
+                "Sorry, couldn't reach the support bot. Please wait for human assistance.",
                 ephemeral=True,
             )
 
@@ -492,8 +474,6 @@ class NinjaThreadManager(commands.Cog):
         logger.debug(f"Shutting down {self.__class__.__name__}")
         if self.ai:
             await self.ai.close()
-        if self.http and not self.http.closed:
-            await self.http.close()
 
 async def setup(bot) -> None:
     await bot.add_cog(NinjaThreadManager(bot))
