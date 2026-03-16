@@ -2,6 +2,7 @@
 import logging
 import re
 import discord
+import aiohttp
 import utils.embedBuilder as embedBuilder
 import utils.ai as ai
 from datetime import datetime, timedelta, timezone
@@ -37,12 +38,16 @@ class ThreadManagementButtons(discord.ui.View):
     async def titleButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(ThreadTitleChangeModal(self.ntm, getattr(interaction.channel, "name")))
 
+    @discord.ui.button(label="Ask the Bot", style=discord.ButtonStyle.secondary, custom_id="ask_bot", emoji="🤖")
+    async def askBotButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self.ntm._askBot(interaction)
+
     # Check if user is Moderator before calling callbacks
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        # allow a user to close their own thread
+        custom_id = interaction.data.get("custom_id") if interaction.data else None
+        # allow a user to close their own thread or ask the bot
         if hasattr(interaction, "user") and interaction.user.id == self.threadCreationUser \
-            and hasattr(interaction, "data") and interaction.data is not None and "custom_id" in interaction.data \
-            and interaction.data.get("custom_id") == "close":
+            and custom_id in ("close", "ask_bot"):
             return True
         # allow moderators to do everything everywhere
         if hasattr(interaction, "message") and hasattr(interaction.user, "roles") and discord.utils.get(getattr(interaction.user, "roles"), name="Moderator"):
@@ -88,6 +93,7 @@ class NinjaThreadManager(commands.Cog):
         self.bot = bot
         self.isInternal = True
         self.ai = ai.NinjaAI(bot)
+        self.http = aiohttp.ClientSession()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -307,6 +313,60 @@ class NinjaThreadManager(commands.Cog):
         await interaction.response.send_message(f"Thread was archived by {interaction.user.display_name}. Anyone can send a message to unarchive it.")
         if not interaction.channel.archived: await interaction.channel.edit(archived=True, reason="NinjaBot")
 
+    async def _askBot(self, interaction) -> None:
+        """Trigger StevesBot's interactive triage flow in the current thread."""
+        if not isinstance(interaction.channel, discord.Thread):
+            await interaction.response.send_message("This can only be used in a thread.", ephemeral=True)
+            return
+
+        api_url = self.bot.config.get("stevesbotApiUrl") if self.bot.config.has("stevesbotApiUrl") else None
+        if not api_url:
+            await interaction.response.send_message("Support bot is not configured.", ephemeral=True)
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        # Determine product from parent channel mapping
+        channel_products = self.bot.config.get("stevesbotChannelProducts") if self.bot.config.has("stevesbotChannelProducts") else {}
+        parent_id = str(interaction.channel.parent_id) if interaction.channel.parent_id else ""
+        preselected_product = channel_products.get(parent_id)
+
+        # Use the thread starter message ID as trigger, fall back to thread ID
+        try:
+            starter = await interaction.channel.fetch_message(interaction.channel.id)
+            trigger_message_id = str(starter.id)
+        except Exception:
+            trigger_message_id = str(interaction.channel.id)
+
+        payload = {
+            "channelId": str(interaction.channel.id),
+            "userId": str(interaction.user.id),
+            "triggerMessageId": trigger_message_id,
+        }
+        if preselected_product:
+            payload["preselectedProduct"] = preselected_product
+
+        try:
+            async with self.http.post(f"{api_url}/api/start-triage", json=payload) as resp:
+                if resp.status == 200:
+                    await interaction.followup.send(
+                        "🤖 The support bot is now active! Follow the prompts below to get help.",
+                        ephemeral=True,
+                    )
+                else:
+                    error_text = await resp.text()
+                    logger.warning(f"StevesBot API returned {resp.status}: {error_text}")
+                    await interaction.followup.send(
+                        "Sorry, the support bot is unavailable right now. Please wait for human assistance.",
+                        ephemeral=True,
+                    )
+        except Exception as e:
+            logger.exception(f"Error calling StevesBot API: {e}")
+            await interaction.followup.send(
+                "Sorry, the support bot is unavailable right now. Please wait for human assistance.",
+                ephemeral=True,
+            )
+
     @app_commands.command()
     @app_commands.guild_only()
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -432,6 +492,8 @@ class NinjaThreadManager(commands.Cog):
         logger.debug(f"Shutting down {self.__class__.__name__}")
         if self.ai:
             await self.ai.close()
+        if self.http and not self.http.closed:
+            await self.http.close()
 
 async def setup(bot) -> None:
     await bot.add_cog(NinjaThreadManager(bot))
