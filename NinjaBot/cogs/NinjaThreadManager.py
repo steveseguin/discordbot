@@ -37,7 +37,7 @@ class ThreadManagementButtons(discord.ui.View):
     async def titleButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(ThreadTitleChangeModal(self.ntm, getattr(interaction.channel, "name")))
 
-    @discord.ui.button(label="Ask the Bot", style=discord.ButtonStyle.danger, custom_id="ask_bot", emoji="🤖")
+    @discord.ui.button(label="Ask the Bot", style=discord.ButtonStyle.primary, custom_id="ask_bot", emoji="🤖")
     async def askBotButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self.ntm._askBot(interaction)
 
