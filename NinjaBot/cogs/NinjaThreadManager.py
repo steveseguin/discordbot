@@ -37,7 +37,7 @@ class ThreadManagementButtons(discord.ui.View):
     async def titleButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_modal(ThreadTitleChangeModal(self.ntm, getattr(interaction.channel, "name")))
 
-    @discord.ui.button(label="Ask the Bot", style=discord.ButtonStyle.secondary, custom_id="ask_bot", emoji="🤖")
+    @discord.ui.button(label="Ask the Bot", style=discord.ButtonStyle.danger, custom_id="ask_bot", emoji="🤖")
     async def askBotButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await self.ntm._askBot(interaction)
 
@@ -338,10 +338,7 @@ class NinjaThreadManager(commands.Cog):
 
         try:
             await interaction.channel.send(command)
-            await interaction.followup.send(
-                "The support bot has been notified! Follow the prompts below to get help.",
-                ephemeral=True,
-            )
+            await interaction.delete_original_response()
         except Exception as e:
             logger.exception(f"Error sending StevesBot mention: {e}")
             await interaction.followup.send(
