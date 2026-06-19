@@ -12,11 +12,14 @@ class NinjaGithub(commands.Cog):
         self.isInternal = False
         self.githubUrl = self.bot.config.get("githubUrl")
         self.commands = {}
-        self.regularUpdater.start()
 
     async def fetchCommands(self) -> None:
         try:
-            async with aiohttp.ClientSession() as session:
+            headers = {
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+            }
+            async with aiohttp.ClientSession(headers=headers) as session:
                 async with session.get(self.githubUrl) as resp:
                     self.commands = await resp.json(content_type="text/plain")
         except Exception as E:
@@ -39,7 +42,11 @@ class NinjaGithub(commands.Cog):
 
     async def cog_unload(self) -> None:
         logger.debug(f"Shutting down {self.__class__.__name__}")
-        self.regularUpdater.cancel()
+        if self.regularUpdater.is_running():
+            self.regularUpdater.cancel()
 
 async def setup(bot) -> None:
-    await bot.add_cog(NinjaGithub(bot))
+    cog = NinjaGithub(bot)
+    await cog.fetchCommands()
+    await bot.add_cog(cog)
+    cog.regularUpdater.start()
