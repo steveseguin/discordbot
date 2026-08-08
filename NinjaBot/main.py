@@ -55,7 +55,7 @@ discord.VoiceClient.warn_nacl = False
 # configure discord gateway intents
 intents = discord.Intents.default()
 intents.message_content = True
-intents.members = True
+intents.members = False
 intents.typing = False
 # configure allowed mentions so bot can't ping @everyone
 mentions = discord.AllowedMentions(everyone=False)
