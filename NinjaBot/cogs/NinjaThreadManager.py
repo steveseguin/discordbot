@@ -3,8 +3,6 @@ import logging
 import re
 import discord
 import utils.embedBuilder as embedBuilder
-import utils.ai as ai
-from datetime import datetime, timedelta, timezone
 from discord.ext import commands
 from discord import app_commands
 
@@ -91,7 +89,9 @@ class NinjaThreadManager(commands.Cog):
         logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
         self.isInternal = True
-        self.ai = ai.NinjaAI(bot)
+        # Direct LLM support is disabled. The "Ask the Bot" button delegates to
+        # the separately operated NinjaClawd Discord bot via _askBot().
+        self.ai = None
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -377,77 +377,6 @@ class NinjaThreadManager(commands.Cog):
         loggedOnSupportStaff.remove(interaction.user.id)
         await self.bot.config.set("loggedOnSupportStaff", loggedOnSupportStaff)
         await interaction.response.send_message(f"You are now logged out of NinjaSupport :zzz: :no_bell:", ephemeral=True)
-
-    @app_commands.command()
-    @app_commands.guild_only()
-    @app_commands.checks.cooldown(1, 30.0)  # 1 use per 30 seconds per user
-    async def ask(self, interaction: discord.Interaction, question: str) -> None:
-        """Get an AI-generated answer to a question about VDO.Ninja"""
-        if not self.ai:
-            await interaction.response.send_message("AI support is not available at the moment", ephemeral=True)
-            return
-
-        await interaction.response.defer()
-
-        # Get context based on channel type
-        messages = []
-        channel_id_str = ""
-        channel_name = ""
-
-        if isinstance(interaction.channel, discord.Thread):
-            # In a thread: get full thread history (up to 50 messages)
-            async for msg in interaction.channel.history(limit=50):
-                messages.append({
-                    "content": msg.content,
-                    "author": {
-                        "id": msg.author.id,
-                        "bot": msg.author.bot
-                    }
-                })
-            messages.reverse()  # Oldest first
-            channel_id_str = str(interaction.channel.parent_id)
-            parent_channel = interaction.channel.parent
-            channel_name = parent_channel.name if parent_channel else "thread"
-        else:
-            # In a regular channel: get recent messages (up to 20, none older than 24 hours)
-            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
-            async for msg in interaction.channel.history(limit=20, after=cutoff_time):
-                messages.append({
-                    "content": msg.content,
-                    "author": {
-                        "id": msg.author.id,
-                        "bot": msg.author.bot
-                    }
-                })
-            messages.reverse()  # Oldest first
-            channel_id_str = str(interaction.channel.id)
-            channel_name = interaction.channel.name if hasattr(interaction.channel, 'name') else "channel"
-
-        # Add channel context to the question
-        context_note = f"[User is asking in #{channel_name}]"
-
-        # Add the current question with context
-        messages.append({
-            "content": f"{context_note}\n\nQuestion: {question}",
-            "author": {
-                "id": interaction.user.id,
-                "bot": False
-            }
-        })
-
-        # Get AI response with channel context
-        ai_response = await self.ai.get_ai_response(messages, channel_id_str)
-
-        if ai_response:
-            embed = embedBuilder.ninjaEmbed(description=ai_response)
-            # Determine thread owner for button permissions
-            thread_owner_id = interaction.channel.owner_id if isinstance(interaction.channel, discord.Thread) else interaction.user.id
-            await interaction.followup.send(
-                embed=embed,
-                view=AIReplyButtons(self, thread_owner_id)
-            )
-        else:
-            await interaction.followup.send("Sorry, I couldn't generate a response. Please try again or wait for human assistance.")
 
     async def cog_command_error(self, ctx, error) -> None:
         """Post error that happen inside this cog to channel"""

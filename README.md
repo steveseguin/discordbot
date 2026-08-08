@@ -1,6 +1,9 @@
-# VDO.Ninja Discord Bot
+# NinjaBot for VDO.Ninja and Social Stream Ninja
 
-A comprehensive Discord bot for the [VDO.Ninja community](https://discord.vdo.ninja), providing automated support, content updates, and community management features.
+A Discord bot used primarily by the [VDO.Ninja](https://vdo.ninja) and [Social Stream Ninja](https://socialstream.ninja) communities, providing automated support, content updates, moderation, and community management features.
+
+- [NinjaBot Privacy Policy](https://updates.vdo.ninja/privacy.html)
+- [NinjaBot Terms of Service](https://updates.vdo.ninja/terms.html)
 
 ![Contributors](https://contrib.rocks/image?repo=steveseguin/discordbot)
 
@@ -9,7 +12,7 @@ A comprehensive Discord bot for the [VDO.Ninja community](https://discord.vdo.ni
 ### Community Support
 - **Command System**: Access helpful information through a collection of easily invokable commands
 - **Automatic Thread Creation**: Organizes support requests into threads for better management
-- **AI-Powered Support**: Bot can provide immediate answers to common questions using LLM integration
+- **NinjaClawd Handoff**: An explicit "Ask the Bot" action can hand a support thread to the separately operated NinjaClawd Discord bot
 - **Anti-Spam Protection**: Detects and manages spam messages and inappropriate content
 
 ### Content Management
@@ -79,35 +82,9 @@ The bot requires several API keys and configuration options. Copy the sample con
 1. Create an API token in Github settings → Developer settings → Personal access tokens → Tokens (classic)
 2. Add to `discordbot.cfg` as `githubApiKey`
 
-### AI Integration (Optional)
-The bot supports multiple AI providers for enhanced support capabilities. When enabled, the bot can automatically respond to questions in configured channels.
+### NinjaClawd Handoff (Optional)
 
-```json
-"aiEnabledChannels": ["CHANNEL_ID"],
-"ai": {
-    "enabled": true,
-    "service": "GEMINI",
-    "api_key": "YOUR_API_KEY",
-    "model": "gemini-2.0-flash",
-    "temperature": 0.7,
-    "max_tokens": 1500,
-    "api_url": ""
-}
-```
-
-**Supported AI Services:**
-- `GEMINI` - Google's Gemini API (recommended: `gemini-2.0-flash`)
-- `OPENAI` - OpenAI API (models like `gpt-4`, `gpt-3.5-turbo`)
-- `OLLAMA` - Self-hosted Ollama (set `api_url` to your Ollama endpoint)
-
-**Channel-Specific Instructions:**
-You can customize the AI's behavior per channel using `channelInstructions`:
-```json
-"channelInstructions": {
-    "SUPPORT_CHANNEL_ID": "You are helping in #support. Focus on troubleshooting...",
-    "BUG_REPORTS_CHANNEL_ID": "You are helping in #bug-reports..."
-}
-```
+NinjaBot does not generate LLM answers directly. When `stevesbotUserId` is configured, the explicit **Ask the Bot** thread action mentions the separately operated NinjaClawd Discord bot to start its support workflow.
 
 ### Freelancer Services Integration (Optional)
 The bot can manage a freelancer services directory with an approval workflow:
@@ -189,4 +166,3 @@ The bot manages the [updates.vdo.ninja](https://updates.vdo.ninja) website, whic
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 For small code contributions, simply submit a PR. For larger changes or new features, please get in touch with the maintainers first.
-
