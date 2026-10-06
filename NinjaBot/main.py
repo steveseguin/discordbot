@@ -72,34 +72,37 @@ class NinjaBot(commands.Bot):
             allowed_mentions=mentions,
             help_command=None
         )
+        self._extension_lock = asyncio.Lock()
 
     # informational event when bot has finished logging in
     async def on_ready(self) -> None:
         logger.info(f"Bot logged in as {self.user}")
 
-        # load all the extensions we want to use
-        # statically defined for security reasons
+        async with self._extension_lock:
+            await self._setup_extensions()
 
-        # internal bot commands
-        await self.load_extension("cogs.NinjaBotUtils")
-        # spammer detection system
-        await self.load_extension("cogs.NinjaAntiSpam")
-        # the bot help command
-        await self.load_extension("cogs.NinjaBotHelp")
-        # commands from github
-        await self.load_extension("cogs.NinjaGithub")
-        # commands added through the bot
-        await self.load_extension("cogs.NinjaDynCmds")
-        # reddit events
-        await self.load_extension("cogs.NinjaReddit")
-        # youtube uploads
-        await self.load_extension("cogs.NinjaYoutube")
-        # updates.vdon.ninja page
-        await self.load_extension("cogs.NinjaUpdates")
-        # auto-thread manager
-        await self.load_extension("cogs.NinjaThreadManager")
-        # freelancer services marketplace
-        await self.load_extension("cogs.NinjaServices")
+        # for funsies
+        await self.change_presence(status=discord.Status.online, activity=discord.Game("helping hand"))
+        logger.info("Bot is done loading")
+
+    async def _setup_extensions(self) -> None:
+        # Called with _extension_lock held. Keep the allowlist static, and resume
+        # after a failed initial load without loading successful extensions twice.
+        extensions = (
+            "cogs.NinjaBotUtils",     # internal bot commands
+            "cogs.NinjaAntiSpam",     # spammer detection system
+            "cogs.NinjaBotHelp",      # the bot help command
+            "cogs.NinjaGithub",       # commands from github
+            "cogs.NinjaDynCmds",      # commands added through the bot
+            "cogs.NinjaReddit",       # reddit events
+            "cogs.NinjaYoutube",      # youtube uploads
+            "cogs.NinjaUpdates",      # updates.vdon.ninja page
+            "cogs.NinjaThreadManager", # auto-thread manager
+            "cogs.NinjaServices",     # freelancer services marketplace
+        )
+        for extension in extensions:
+            if extension not in self.extensions:
+                await self.load_extension(extension)
 
         # takes care of pushing all application commands to discord
         guild = int(self.config.get("guild"))
@@ -107,10 +110,6 @@ class NinjaBot(commands.Bot):
         await self.tree.sync(guild=discord.Object(id=guild))
         # attach error handler to tree to handle app command errors
         self.tree.on_error = self.on_app_command_error
-
-        # for funsies
-        await self.change_presence(status=discord.Status.online, activity=discord.Game("helping hand"))
-        logger.info("Bot is done loading")
 
     async def on_message(self, message: discord.Message) -> None:
         ctx = await self.get_context(message)
@@ -137,10 +136,12 @@ class NinjaBot(commands.Bot):
     async def reloadExtensions(self, ctx) -> None:
         await ctx.send("Reloading bot extensions")
         try:
-            for ext in list(self.extensions.keys()):
-                if ext != "cogs.NinjaThreadManager":
-                    logger.debug(f"Reloading extension {ext}")
-                    await self.reload_extension(ext)
+            async with self._extension_lock:
+                for ext in list(self.extensions.keys()):
+                    if ext != "cogs.NinjaThreadManager":
+                        logger.debug(f"Reloading extension {ext}")
+                        await self.reload_extension(ext)
+                await self._setup_extensions()
         except Exception as E:
             await ctx.send("There was an error while reloading bot extensions:")
             await ctx.send(E)
