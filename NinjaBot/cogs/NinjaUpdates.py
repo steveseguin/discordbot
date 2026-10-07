@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import re
 import discord
 import aiohttp
@@ -14,6 +15,7 @@ class NinjaUpdates(commands.Cog):
         logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
         self.isInternal = True
+        self.updateLock = asyncio.Lock()
         self.http = aiohttp.ClientSession()
 
     @commands.Cog.listener()
@@ -26,75 +28,76 @@ class NinjaUpdates(commands.Cog):
             and self.bot.config.has("githubApiKey") \
             and self.bot.config.has("githubGistId"):
 
-            ghHeaders = {
-                "Accept": "application/vnd.github+json",
-                "Authorization": f"token {self.bot.config.get('githubApiKey')}"
-            }
-
-            try:
-                # get latest gist raw url from github api
-                async with self.http.get(f"https://api.github.com/gists/{self.bot.config.get('githubGistId')}", headers=ghHeaders) as resp:
-                    gistApiData = await resp.json(content_type="application/json")
-                    if resp.status == 200 and "files" in gistApiData and "updates.json" in gistApiData["files"]:
-                        raw_url = gistApiData["files"]["updates.json"]["raw_url"]
-                    else:
-                        logger.error(f"Failed to fetch gist API: HTTP {resp.status}, has files: {'files' in gistApiData}")
-                        return
-
-                # fetch gist data
-                async with self.http.get(raw_url) as resp:
-                    if resp.status != 200:
-                        logger.error(f"Failed to fetch gist content: HTTP {resp.status}")
-                        return
-                    gistContent = await resp.json(content_type=None)
-                    # we rely on the file beeing there and having content
-                    # this is to not clear it in case download fails
-                    if not gistContent: return
-
-                # Search for existing message id in the current gist content
-                prevMessage = next(filter(lambda m: "msgid" in m and m["msgid"] == str(message.id), gistContent), False)
-                if prevMessage:
-                    # This is an update to an existing message
-                    messagePos = gistContent.index(prevMessage)
-                    oldEntry = gistContent[messagePos]
-                    oldEntry["content"] = await self.formatMessageContent(message)
-                    oldEntry["attachments"] = self.getAttachments(message)
-                    gistContent[messagePos] = oldEntry
-                else:
-                    # create new entry and add to gistContent
-                    newEntry = dict()
-                    newEntry["content"] = await self.formatMessageContent(message)
-                    newEntry["timestamp"] = datetime.now().timestamp()
-                    newEntry["name"] = getattr(message.author, "nick", None) or message.author.name
-                    newEntry["msgid"] = str(message.id)
-                    newEntry["avatar"] = str(message.author.display_avatar.url or "")
-                    newEntry["attachments"] = self.getAttachments(message)
-                    gistContent.append(newEntry)
-
-                # order gistContent by timestamp
-                gistContent = sorted(gistContent, key=lambda k: k["timestamp"])
-                # only keep the last 60 entrys in list
-                gistContent = gistContent[-70:]
-
-                # create data structure for github api
-                patchData = {
-                    "files": {
-                        "updates.json": {
-                            "content": json.dumps(gistContent, indent=4)
-                        }
-                    }
+            async with self.updateLock:
+                ghHeaders = {
+                    "Accept": "application/vnd.github+json",
+                    "Authorization": f"token {self.bot.config.get('githubApiKey')}"
                 }
 
-                #logger.debug(json.dumps(gistContent, indent=4))
-                # send updated data to github
-                async with self.http.patch(f"https://api.github.com/gists/{self.bot.config.get('githubGistId')}", json=patchData, headers=ghHeaders) as gistApiResp:
-                    if gistApiResp.status == 200:
-                        logger.info("Successfully updated gist data")
+                try:
+                    # get latest gist raw url from github api
+                    async with self.http.get(f"https://api.github.com/gists/{self.bot.config.get('githubGistId')}", headers=ghHeaders) as resp:
+                        gistApiData = await resp.json(content_type="application/json")
+                        if resp.status == 200 and "files" in gistApiData and "updates.json" in gistApiData["files"]:
+                            raw_url = gistApiData["files"]["updates.json"]["raw_url"]
+                        else:
+                            logger.error(f"Failed to fetch gist API: HTTP {resp.status}, has files: {'files' in gistApiData}")
+                            return
+
+                    # fetch gist data
+                    async with self.http.get(raw_url) as resp:
+                        if resp.status != 200:
+                            logger.error(f"Failed to fetch gist content: HTTP {resp.status}")
+                            return
+                        gistContent = await resp.json(content_type=None)
+                        # we rely on the file beeing there and having content
+                        # this is to not clear it in case download fails
+                        if not gistContent: return
+
+                    # Search for existing message id in the current gist content
+                    prevMessage = next(filter(lambda m: "msgid" in m and m["msgid"] == str(message.id), gistContent), False)
+                    if prevMessage:
+                        # This is an update to an existing message
+                        messagePos = gistContent.index(prevMessage)
+                        oldEntry = gistContent[messagePos]
+                        oldEntry["content"] = await self.formatMessageContent(message)
+                        oldEntry["attachments"] = self.getAttachments(message)
+                        gistContent[messagePos] = oldEntry
                     else:
-                        logger.error("Error while updating gist data")
-                        logger.error(await gistApiResp.text())
-            except Exception as E:
-                raise E
+                        # create new entry and add to gistContent
+                        newEntry = dict()
+                        newEntry["content"] = await self.formatMessageContent(message)
+                        newEntry["timestamp"] = datetime.now().timestamp()
+                        newEntry["name"] = getattr(message.author, "nick", None) or message.author.name
+                        newEntry["msgid"] = str(message.id)
+                        newEntry["avatar"] = str(message.author.display_avatar.url or "")
+                        newEntry["attachments"] = self.getAttachments(message)
+                        gistContent.append(newEntry)
+
+                    # order gistContent by timestamp
+                    gistContent = sorted(gistContent, key=lambda k: k["timestamp"])
+                    # only keep the last 60 entrys in list
+                    gistContent = gistContent[-70:]
+
+                    # create data structure for github api
+                    patchData = {
+                        "files": {
+                            "updates.json": {
+                                "content": json.dumps(gistContent, indent=4)
+                            }
+                        }
+                    }
+
+                    #logger.debug(json.dumps(gistContent, indent=4))
+                    # send updated data to github
+                    async with self.http.patch(f"https://api.github.com/gists/{self.bot.config.get('githubGistId')}", json=patchData, headers=ghHeaders) as gistApiResp:
+                        if gistApiResp.status == 200:
+                            logger.info("Successfully updated gist data")
+                        else:
+                            logger.error("Error while updating gist data")
+                            logger.error(await gistApiResp.text())
+                except Exception as E:
+                    raise E
     
     @commands.Cog.listener()
     async def on_raw_message_edit(self, partialMessage) -> None:
