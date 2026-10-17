@@ -44,7 +44,7 @@ li { margin-bottom: 8px; }
 <ul>
 <li>Detect spam, remove prohibited invite links, warn users, delete abusive messages, and take configured moderation actions. Streaming-key pattern detection does not currently delete messages.</li>
 <li>Create, title, manage, and archive support threads; run commands; and notify participating support staff.</li>
-<li>Publish authorized project updates and approved community service listings.</li>
+<li>Publish Steve Seguin's own project-update messages and approved community service listings.</li>
 <li>Post configured Reddit and YouTube updates to Discord.</li>
 <li>Diagnose failures, secure the bot, prevent abuse, and maintain service reliability.</li>
 </ul>
@@ -57,7 +57,8 @@ li { margin-bottom: 8px; }
 <li>Routine moderation uses an in-memory buffer containing the latest message text and recent message/channel identifiers for each active author. Every two minutes, the bot removes buffers for authors inactive for more than 60 seconds. Active authors' latest text is replaced as new text arrives. The Discord client also keeps a bounded in-memory message cache. Neither cache is written to a message-history file.</li>
 <li>Moderation reports containing message excerpts or attachment details are sent to the staff moderation channel in Discord, where staff can review actions and handle disputes. These reports are not automatically deleted after 30 days.</li>
 <li>New operational diagnostics exclude message text, attachments, and configuration values. Historical system logs may remain until the hosting system's log rotation removes them.</li>
-<li>Authorized updates and approved service listings may be stored in GitHub Gists and displayed publicly while needed for the publishing feature or until corrected or removed.</li>
+<li>The updates publisher copies only Steve Seguin's own posts from the configured updates channel to a GitHub Gist for the public updates site. It does not publish other members' ordinary chat messages.</li>
+<li>Approved service-listing records, submitted through the services form and reviewed in Discord, are stored separately in a GitHub Gist for the public directory. These are intentional directory submissions, not collected chat history. Public updates and listings remain available while needed for their publishing features or until corrected or removed.</li>
 <li>The management bot does not export channel history or maintain a separate message-history archive.</li>
 <li>Bot configuration, moderator-created command replies, integration cursors, and staff notification preferences remain stored while needed to operate those features.</li>
 <li>Messages and threads retained by Discord remain subject to Discord server settings and Discord's own retention practices.</li>
@@ -69,7 +70,7 @@ li { margin-bottom: 8px; }
 <p>These providers may process information outside Canada, including in the United States and other countries where privacy laws and lawful-access rules differ. Information may also be disclosed when reasonably believed necessary to comply with law or legal process; investigate fraud, abuse, security incidents, or violations; protect users or the Protected Parties; establish or defend legal claims; or complete a reorganization, financing, asset transfer, merger, or similar transaction subject to appropriate safeguards where required.</p>
 
 <h2>7. Public content</h2>
-<p>Messages posted by authorized users in configured update channels may be republished on the public updates site. Approved service submissions may also be published publicly. Do not submit information through those workflows that you do not want made public.</p>
+<p>The public updates site republishes only Steve Seguin's own posts from the configured updates channel. Community members' ordinary conversations are not published to that site. Separately, approved submissions to the services form are published in the public services directory. Do not include information in a service submission that you do not want made public.</p>
 
 <h2>8. User choices and requests</h2>
 <p>You can avoid optional bot interactions, refrain from pressing Ask the Bot, delete Discord messages where Discord permits, or contact us to request access, correction, or deletion of personal information controlled by the Operator. Server administrators can restrict the bot's channel access or remove it. Automated moderation applies to eligible messages in channels the bot can access; there is no individual moderation bypass. The Operator may need to verify your identity and may decline, limit, or redact a request where permitted or required by law, including to protect another person's privacy, security, confidential information, legal privilege, or the integrity of an investigation. Some information may be retained where reasonably necessary for security, abuse prevention, dispute resolution, legal compliance, backups, or preserving the integrity of public records.</p>
