@@ -58,11 +58,11 @@ li { margin-bottom: 8px; }
 <li>Moderation reports containing message excerpts or attachment details are sent to the staff moderation channel in Discord, where staff can review actions and handle disputes. These reports are not automatically deleted after 30 days.</li>
 <li>New operational diagnostics exclude message text, attachments, and configuration values. Historical system logs may remain until the hosting system's log rotation removes them.</li>
 <li>Authorized updates and approved service listings may be stored in GitHub Gists and displayed publicly while needed for the publishing feature or until corrected or removed.</li>
-<li>Previously exported history is retained in a private archive separate from the running bot for archival preservation and recovery. Access is restricted to the Operator. This archive can be retained beyond 30 days and has no automatic deletion schedule; it is not used for routine bot operations or model training. The running management bot does not export channel history.</li>
+<li>The management bot does not export channel history or maintain a separate message-history archive.</li>
 <li>Bot configuration, moderator-created command replies, integration cursors, and staff notification preferences remain stored while needed to operate those features.</li>
 <li>Messages and threads retained by Discord remain subject to Discord server settings and Discord's own retention practices.</li>
 </ul>
-<p>To request access, correction, or deletion of information controlled by the Operator, email <a href="mailto:steve@seguin.email">steve@seguin.email</a> with your Discord user ID and the relevant message or listing links. Requests are reviewed promptly, including whether they concern a published listing, a moderation report, or archived data. The archive is separate from the running service and does not follow the in-memory buffer's expiry schedule.</p>
+<p>To request access, correction, or deletion of information controlled by the Operator, email <a href="mailto:steve@seguin.email">steve@seguin.email</a> with your Discord user ID and the relevant message or listing links. Requests are reviewed promptly, including requests concerning published listings and moderation reports.</p>
 
 <h2>6. Sharing and service providers</h2>
 <p>Information may be shared only as needed to operate selected features, comply with law, or protect users and services. Relevant providers and integrations may include Discord, GitHub/Gists, Reddit, YouTube/Google APIs, project-operated image caching, hosting and network providers, and NinjaClawd as a separate related application. Third-party providers' own terms and privacy policies apply to their services.</p>
