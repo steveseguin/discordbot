@@ -4,8 +4,8 @@ This evidence shows the community-management NinjaBot (application `843169738556
 
 The management bot uses Message Content for proactive cross-channel text-similarity checks and attachment/image-link flood detection. It compares ordinary messages that do not invoke the bot. Slash commands and mentions cannot supply those unsolicited messages. Moderation buffers stay in memory, and staff reports are posted in Discord.
 
-- [Animated moderation demonstration](moderation-demo.gif): ordinary text, repeated text across two channels, one-character variations, and attachment flooding. The recorded replay uses the unchanged deployed handler with synthetic member inputs and real Discord message deletions, warnings, and reports. Account kicks are simulated.
-- [Interactive moderation replay](https://updates.vdo.ninja/intent-review-evidence/moderation-demo.html): inspect the recorded inputs and actions for each case.
+- [Discord screen recording](https://updates.vdo.ninja/intent-review-evidence/moderation-demo.html): watch attachment messages arrive, the sixth message disappear, and the temporary warning appear and clear. [Download MP4](moderation-demo.mp4) or [view the animated screen capture](moderation-demo.gif).
+- The recording uses the unchanged deployed moderation handler with synthetic member inputs backed by real Discord test posts. Deletions and warnings happen in Discord; no accounts are removed.
 - `thread-creation.png`: automatic support-thread welcome and moderation controls.
 - `spam-moderation.png`: repeated spam enforcement reports in the staff moderation channel.
 - `documentation-command.png`: a message-content command response linking a user to the VDO.Ninja documentation.
