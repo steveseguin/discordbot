@@ -90,9 +90,9 @@ When `stevesbotUserId` is configured, the explicit **Ask the Bot** thread action
 
 ### Message handling
 
-Enable **Message Content Intent** for custom cross-channel similarity and attachment-flood moderation. **Server Members** and **Presence** intents are not required. Prefix commands, thread controls, and authorized publishing use the same existing workflows.
+Enable **Message Content Intent** for custom cross-channel similarity and attachment-flood moderation. **Server Members** and **Presence** intents are not required. Prefix commands and thread controls use the same existing workflows.
 
-Routine moderation buffers stay in memory. A cleanup task runs every two minutes and removes authors inactive for over 60 seconds. Diagnostics contain code locations and error types, without message text or configuration values. Staff reports remain in Discord; authorized updates, approved listings, and moderator-created commands retain the storage needed for those features. See the [privacy policy](https://updates.vdo.ninja/privacy.html) for retention and deletion requests.
+Routine moderation buffers stay in memory. A cleanup task runs every two minutes and removes authors inactive for over 60 seconds. Diagnostics contain code locations and error types, without message text or configuration values. Staff reports remain in Discord. See the [privacy policy](https://updates.vdo.ninja/privacy.html) for retention and deletion requests.
 
 ### Freelancer Services Integration (Optional)
 The bot can manage a freelancer services directory with an approval workflow:
@@ -167,7 +167,7 @@ docker run -d \
 
 ## Updates Channel
 
-The bot manages the [updates.vdo.ninja](https://updates.vdo.ninja) website, which displays updates from the Discord #updates channel. Messages posted by allowed users in the specified updates channel are automatically processed and published.
+The bot manages the [updates.vdo.ninja](https://updates.vdo.ninja) website, which displays project announcements from the Discord #updates channel.
 
 ## Contributing
 
