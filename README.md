@@ -2,6 +2,8 @@
 
 A Discord bot used primarily by the [VDO.Ninja](https://vdo.ninja) and [Social Stream Ninja](https://socialstream.ninja) communities, providing automated support, content updates, moderation, and community management features.
 
+This repository runs the community-management bot (application `843169738556571680`). The AI support bot (`1465030230107357275`) is a separate application and deployment.
+
 - [NinjaBot Privacy Policy](https://updates.vdo.ninja/privacy.html)
 - [NinjaBot Terms of Service](https://updates.vdo.ninja/terms.html)
 
@@ -82,9 +84,15 @@ The bot requires several API keys and configuration options. Copy the sample con
 1. Create an API token in Github settings → Developer settings → Personal access tokens → Tokens (classic)
 2. Add to `discordbot.cfg` as `githubApiKey`
 
-### NinjaClawd Handoff (Optional)
+### AI Support Handoff (Optional)
 
-NinjaBot does not generate LLM answers directly. When `stevesbotUserId` is configured, the explicit **Ask the Bot** thread action mentions the separately operated NinjaClawd Discord bot to start its support workflow.
+When `stevesbotUserId` is configured, the explicit **Ask the Bot** thread action mentions the separate AI support bot with the requesting user and thread starter IDs. The management bot does not call model providers, train models, or build a RAG index.
+
+### Message handling
+
+Enable **Message Content Intent** for custom cross-channel similarity and attachment-flood moderation. **Server Members** and **Presence** intents are not required. Prefix commands and thread controls use the same existing workflows.
+
+Routine moderation buffers stay in memory. A cleanup task runs every two minutes and removes authors inactive for over 60 seconds. Diagnostics contain code locations and error types, without message text or configuration values. Staff reports remain in Discord. See the [privacy policy](https://updates.vdo.ninja/privacy.html) for retention and deletion requests.
 
 ### Freelancer Services Integration (Optional)
 The bot can manage a freelancer services directory with an approval workflow:
@@ -159,7 +167,7 @@ docker run -d \
 
 ## Updates Channel
 
-The bot manages the [updates.vdo.ninja](https://updates.vdo.ninja) website, which displays updates from the Discord #updates channel. Messages posted by allowed users in the specified updates channel are automatically processed and published.
+The bot manages the [updates.vdo.ninja](https://updates.vdo.ninja) website, which displays project announcements from the Discord #updates channel.
 
 ## Contributing
 

@@ -52,46 +52,13 @@ class ThreadManagementButtons(discord.ui.View):
         await interaction.response.send_message("Sorry, only staff can use this button!", ephemeral=True)
         return False
 
-# The buttons shown below the AI response message
-class AIReplyButtons(discord.ui.View):
-    def __init__(self, NinjaThreadManager, threadCreationUser) -> None:
-        super().__init__(timeout=None)
-        self.ntm = NinjaThreadManager
-        self.threadCreationUser = threadCreationUser
-
-    @discord.ui.button(label="This answered my question", style=discord.ButtonStyle.success, emoji="✅")
-    async def closeButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await self.ntm._close(interaction)
-
-    @discord.ui.button(label="This does NOT answer my question", style=discord.ButtonStyle.primary, emoji="❌")
-    async def continueButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_message("Thanks for the feedback. Please be patient while you wait for someone to answer." \
-                                                "\nFeel free to use any above mentioned methods to search for an answer " \
-                                                "yourself and close the thread if you do find it.", ephemeral=True)
-
-    @discord.ui.button(label="Ask a follow-up question", style=discord.ButtonStyle.secondary, emoji="🔄")
-    async def followupButton(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_message("You can ask a follow-up question by replying to the AI's message.", ephemeral=True)
-
-    # Check user permissions before calling callbacks
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        # allow the thread creation user to do everything
-        if hasattr(interaction, "user") and interaction.user.id == self.threadCreationUser:
-            return True
-        # allow moderators to do everything
-        if hasattr(interaction, "message") and hasattr(interaction.user, "roles") and discord.utils.get(getattr(interaction.user, "roles"), name="Moderator"):
-            return True
-        await interaction.response.send_message("Sorry, you can't use this button", ephemeral=True)
-        return False
 
 class NinjaThreadManager(commands.Cog):
     def __init__(self, bot) -> None:
         logger.debug(f"Loading {self.__class__.__name__}")
         self.bot = bot
         self.isInternal = True
-        # Direct LLM support is disabled. The "Ask the Bot" button delegates to
-        # the separately operated NinjaClawd Discord bot via _askBot().
-        self.ai = None
+        # The Ask the Bot action invokes the separate support application.
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -99,94 +66,7 @@ class NinjaThreadManager(commands.Cog):
         if message.author == self.bot.user or message.author.bot:
             return
                 
-        # Handle reply to bot in an existing thread
-        if isinstance(message.channel, discord.Thread) and message.reference and message.reference.message_id and self.ai:
-            try:
-                # Get the message being replied to
-                replied_message = await message.channel.fetch_message(message.reference.message_id)
-                
-                # If it's a reply to a bot message, process it for AI response
-                if replied_message.author == self.bot.user:
-                    # Get thread history for context
-                    messages = []
-                    async for msg in message.channel.history(limit=20):
-                        messages.append({
-                            "content": msg.content,
-                            "author": {
-                                "id": msg.author.id,
-                                "bot": msg.author.bot
-                            }
-                        })
-                    messages.reverse()  # Oldest first
-                    
-                    # Get AI response with channel context
-                    channel_id_str = str(message.channel.parent_id)  # Parent channel of the thread
-                    ai_response = await self.ai.get_ai_response(messages, channel_id_str)
-                    
-                    if ai_response:
-                        embed = embedBuilder.ninjaEmbed(description=ai_response)
-                        await message.reply(
-                            embed=embed,
-                            view=AIReplyButtons(self, message.channel.owner_id)
-                        )
-                    return
-            except Exception as e:
-                logger.exception(f"Error processing reply message: {e}")
-        
-        # Handle regular messages in threads - ONLY process initial messages, not any follow-ups
-        if isinstance(message.channel, discord.Thread) and self.ai:
-            try:
-                channel_id_str = str(message.channel.parent_id)
-                
-                if self.bot.config.has("aiEnabledChannels") and channel_id_str in self.bot.config.get("aiEnabledChannels"):
-                    # Get all messages in the thread so far
-                    thread_messages = []
-                    async for msg in message.channel.history(limit=10):
-                        thread_messages.append({
-                            "content": msg.content,
-                            "author": {
-                                "id": msg.author.id,
-                                "bot": msg.author.bot
-                            }
-                        })
-                    thread_messages.reverse()  # Convert to oldest first
-                    
-                    # Only respond if this is the first user message after the welcome message
-                    # Check message count - if more than 2 (welcome + first message), don't respond automatically
-                    user_messages = [msg for msg in thread_messages if not msg.get("author", {}).get("bot", False)]
-                    
-                    # Only respond if this is the first or second user message
-                    if len(user_messages) <= 2:
-                        # Check if there are any substantive bot responses already
-                        has_ai_response = False
-                        for msg in thread_messages:
-                            if msg.get("author", {}).get("bot", False):
-                                bot_content = msg.get("content", "")
-                                # Check if this looks like an AI response (not just welcome message)
-                                if "Here's what NinjaBot thinks" in bot_content:
-                                    has_ai_response = True
-                                    break
-                        
-                        # Only respond if there are no AI responses yet
-                        if not has_ai_response:
-                            # Check if we should respond based on message history
-                            should_respond = await self.ai.should_respond_with_history(thread_messages, channel_id_str)
-                            logger.info(f"Should respond based on message history: {should_respond}")
-                            
-                            if should_respond:
-                                # Get AI response
-                                ai_response = await self.ai.get_ai_response(thread_messages, channel_id_str)
-                                
-                                if ai_response:
-                                    embed = embedBuilder.ninjaEmbed(description=ai_response)
-                                    await message.channel.send(
-                                        "**Here's what NinjaBot thinks might help with your question:**",
-                                        embed=embed,
-                                        view=AIReplyButtons(self, message.channel.owner_id)
-                                    )
-            except Exception as e:
-                logger.exception(f"Error processing thread message: {e}")
-        
+
         # Get context for regular message processing (thread creation)
         ctx = await self.bot.get_context(message)
         
@@ -231,52 +111,6 @@ class NinjaThreadManager(commands.Cog):
                 except Exception as e:
                     logger.exception(f"Error adding staff to thread: {e}")
                 
-                # Check if AI should respond in this channel
-                if self.ai and self.bot.config.has("aiEnabledChannels") and ctx.message.content:
-                    # Fix: Get aiEnabledChannels without default value
-                    ai_enabled_channels = self.bot.config.get("aiEnabledChannels")
-                    if ai_enabled_channels is None:
-                        ai_enabled_channels = []
-                        
-                    logger.info(f"Checking if AI should respond in channel: {ctx.channel.id}")
-                    logger.debug(f"AI enabled channels: {ai_enabled_channels}")
-                    
-                    if self.bot.config.has("ai"):
-                        logger.debug(f"AI config: {self.bot.config.get('ai')}")
-                    
-                    channel_id_str = str(ctx.channel.id)
-                    logger.info(f"Current channel ID: {channel_id_str}")
-                    logger.info(f"Channel in AI enabled list: {channel_id_str in ai_enabled_channels}")
-                    
-                    if channel_id_str in ai_enabled_channels:
-                        try:
-                            # Format message for AI
-                            messages = [{
-                                "content": ctx.message.content,
-                                "author": {
-                                    "id": ctx.message.author.id,
-                                    "bot": False
-                                }
-                            }]
-                            
-                            # Check if AI should respond to this message
-                            should_respond = await self.ai.should_respond(messages)
-                            logger.info(f"AI should respond: {should_respond}")
-                            
-                            if should_respond:
-                                # Get AI response with channel context
-                                ai_response = await self.ai.get_ai_response(messages, channel_id_str)
-                                
-                                if ai_response:
-                                    ai_response += "\nThe above response was generated by a Large Language Model, so take it with a grain of salt!"
-                                    ai_embed = embedBuilder.ninjaEmbed(description=ai_response)
-                                    await createdThread.send(
-                                        "**Here's what NinjaBot thinks might help with your question. If it answers your question, click the button below or reply for more assistance:**",
-                                        embed=ai_embed,
-                                        view=AIReplyButtons(self, ctx.message.author.id)
-                                    )
-                        except Exception as e:
-                            logger.exception(f"Error in AI response process: {e}")
             except Exception as e:
                 logger.exception(f"Error creating thread: {e}")
 
@@ -398,8 +232,6 @@ class NinjaThreadManager(commands.Cog):
 
     async def cog_unload(self) -> None:
         logger.debug(f"Shutting down {self.__class__.__name__}")
-        if self.ai:
-            await self.ai.close()
 
 async def setup(bot) -> None:
     await bot.add_cog(NinjaThreadManager(bot))

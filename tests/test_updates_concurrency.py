@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import types
 import unittest
+from unittest.mock import AsyncMock, patch
 
 
 def load_cog():
@@ -186,6 +187,21 @@ class UpdatesTests(unittest.IsolatedAsyncioTestCase):
         await self.cog.on_message(message(2))
         self.assertEqual({row["msgid"] for row in self.gist.rows}, {"0", "2"})
 
+    async def test_rejected_patch_does_not_read_or_log_response_body(self):
+        self.gist.block_first = False
+        self.gist.first_failure = "http"
+        body = AsyncMock(return_value="synthetic-private-response")
+        with patch.object(Response, "text", body):
+            with self.assertLogs("updates-test", level="ERROR") as logs:
+                await self.cog.on_message(message(1))
+        body.assert_not_awaited()
+        self.assertEqual(logs.output, [
+            "ERROR:updates-test:Error while updating gist data",
+            "ERROR:updates-test:Gist update rejected",
+        ])
+        self.assertNotIn("synthetic-private-response", "\n".join(logs.output))
+        self.assertFalse(self.cog.updateLock.locked())
+
     async def test_read_failure_then_success(self):
         self.gist.get_status = 503
         await self.cog.on_message(message(1))
@@ -221,3 +237,4 @@ class UpdatesTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

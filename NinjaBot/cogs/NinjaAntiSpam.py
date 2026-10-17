@@ -70,7 +70,7 @@ class NinjaAntiSpam(commands.Cog):
                 "image_channels": [],  # Track channels where images were posted
                 "image_timestamps": {},  # {channel_id: [timestamps]} for rate limiting
             }
-            logger.debug(f"built new user {str(uid)}/{str(message.author)} object {self.h[uid]}")
+            logger.debug("Created in-memory moderation buffer")
         else:
             # user has posted their 2nd+ message
             self.h[uid]["msgs"].append([message.id, message.channel.id])
@@ -108,7 +108,7 @@ class NinjaAntiSpam(commands.Cog):
 
         # If user posts to 3+ channels within the tracking window, flag as spam
         if len(self.h[uid]["channels"]) >= 3:
-            logger.info(f"Cross-channel spam detected: {len(self.h[uid]['channels'])} channels by user {message.author}")
+            logger.info("Cross-channel spam detected")
             abuseInc = max(abuseInc, 3)  # Immediate kick threshold
 
         # Update last text message (only for text, not image filenames)
@@ -171,22 +171,13 @@ class NinjaAntiSpam(commands.Cog):
             if not isinstance(botmsg.channel, DMChannel):
                 await botmsg.delete()
 
-        # find stream keys in messages and delete them for safetly
-        # right now we have youtube and twitch
+        # Detection only; automatic stream-key deletion is disabled.
         if len(re.findall(r"(?:live_\d{8}_[a-zA-Z0-9]{32})|(?:[a-z0-9]{4}-){4}[a-z0-9]{4}", message.content)):
-            logger.info("Streamkey was found in message, deleting for safety")
-            if not isinstance(message.channel, DMChannel):
-                await message.delete()
-
-            botmsg = await message.channel.send(f"Hey there {message.author.mention}, there was a stream key found in your last message. "
-                                                "For your safety the message was deleted. You can post your message again without doxing yourself ;)")
-            await sleep(12)
-            if not isinstance(botmsg.channel, DMChannel):
-                await botmsg.delete()
+            logger.info("Stream-key pattern detected")
 
         self.h[uid]["abuse"] += abuseInc
         if abuseInc > 0: 
-            logger.debug(f"user {self.h[uid]} increased abuse count by {abuseInc} to {self.h[uid]['abuse']}")
+            logger.debug("Increased moderation abuse score")
         if self.h[uid]["abuse"] >= 3: # too much spam
             logger.info("starting spam cleanup")
             await self.cleanupMember(message.author)
@@ -198,10 +189,10 @@ class NinjaAntiSpam(commands.Cog):
         if kick:
             try:
                 await author.kick(reason="Spam")
-                logger.warn(f"{author} has been kicked for spam")
+                logger.warning("Member kicked for spam")
                 await botlogCh.send(f"{author} has been kicked for spam. Spam Report:")
             except Exception as E:
-                logger.warn(f"Could not kick user {str(author)}")
+                logger.warning("Could not kick member")
 
         while True:
             try:
@@ -215,7 +206,7 @@ class NinjaAntiSpam(commands.Cog):
                         await self.sendReport(botlogCh, userData["lm"])
                     else:
                         await self.sendReport(botlogCh, "No History available")
-                    logger.debug(userData)
+                    logger.debug("Finished processing moderation buffer")
                     await sleep(2)
                 else:
                     break
@@ -236,7 +227,7 @@ class NinjaAntiSpam(commands.Cog):
                     line = f"{msg.channel.name}: {msg.attachments[0].filename} <{msg.attachments[0].url}>"
                 if msg.content:
                     line = f"{msg.channel.name}: {msg.content}"
-                logger.warning(line)
+                logger.warning("Removing spam message")
                 await msg.delete()
                 if len(blMsg) + len(line) > 4090:
                     await self.sendReport(botlogCh, blMsg)
@@ -254,12 +245,10 @@ class NinjaAntiSpam(commands.Cog):
     @tasks.loop(minutes=2)
     async def historyCleanupJob(self) -> None:
         logger.debug("Running antispam history-cleanup job")
-        logger.debug(f"self.h before history-cleanup: {self.h}")
         now = datetime.now().timestamp()
         for uid, d in self.h.copy().items():
             if now - d["lmts"] > 60:
                 del self.h[uid]
-        logger.debug(f"self.h after history-cleanup: {self.h}")
 
     @historyCleanupJob.before_loop
     async def before_historyCleanupJob(self) -> None:
