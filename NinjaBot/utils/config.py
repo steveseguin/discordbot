@@ -25,7 +25,7 @@ class Config:
         """set a config option to a new value + trigger flush"""
         self._configOptions[key] = newVal
         await self._flushToFile()
-        logger.debug(f"changed {key} to {newVal}")
+        logger.debug("Configuration updated")
 
     async def _flushToFile(self) -> None:
         """Write config options from memory to file"""

@@ -70,7 +70,7 @@ class ServiceApprovalView(View):
             # Announce in public channel
             await self.cog.announce_service(service_data)
 
-            logger.info(f"Approved service listing: {service_data.get('name')} by {interaction.user.display_name}")
+            logger.info("Approved service listing")
         else:
             await interaction.followup.send("Error: Could not publish service listing. Check bot logs.", ephemeral=True)
 
@@ -109,7 +109,7 @@ class ServiceApprovalView(View):
 
         await interaction.response.send_message("Submission rejected.", ephemeral=True)
 
-        logger.info(f"Rejected service listing by {interaction.user.display_name}")
+        logger.info("Rejected service listing")
 
 
 class NinjaServices(commands.Cog):
@@ -230,14 +230,14 @@ class NinjaServices(commands.Cog):
                 if success:
                     await self.announce_service(service_data)
                     await channel.send(f"✅ **{service_data.get('name', 'Unknown')}** approved by {user.display_name} (via reaction)")
-                    logger.info(f"Approved service listing via reaction: {service_data.get('name')} by {user.display_name}")
+                    logger.info("Approved service listing via reaction")
                 else:
                     await channel.send(f"❌ Error approving service listing. Check bot logs.")
 
             elif str(payload.emoji) == "❌":
                 # Reject
                 await channel.send(f"❌ Submission rejected by {user.display_name} (via reaction)")
-                logger.info(f"Rejected service listing via reaction by {user.display_name}")
+                logger.info("Rejected service listing via reaction")
 
         except Exception as e:
             logger.exception(f"Error processing reaction approval: {e}")
@@ -292,7 +292,7 @@ class NinjaServices(commands.Cog):
             embed.set_footer(text="View all services at socialstream.ninja/docs/services.html")
 
             await announce_channel.send(embed=embed)
-            logger.info(f"Announced service listing for {service_data.get('name')} in channel {announce_channel_id}")
+            logger.info("Announced service listing")
 
         except Exception as e:
             logger.exception(f"Error announcing service: {e}")
@@ -372,7 +372,7 @@ class NinjaServices(commands.Cog):
 
             # Validate required fields
             if not service.get("name") or not service.get("discord") or not service.get("description"):
-                logger.warning(f"Missing required fields in submission: {service}")
+                logger.warning("Service submission missing required fields")
                 return None
 
             return service
@@ -440,11 +440,11 @@ class NinjaServices(commands.Cog):
                     service_data["id"] = existing.get("id", service_data["id"])  # Keep original ID
                     service_data["addedDate"] = existing.get("addedDate", service_data["addedDate"])  # Keep original date
                     gist_content["services"][idx] = service_data
-                    logger.info(f"Updated existing service listing for {service_data.get('discord')}")
+                    logger.info("Updated existing service listing")
                 else:
                     # Add new entry
                     gist_content["services"].append(service_data)
-                    logger.info(f"Added new service listing for {service_data.get('discord')}")
+                    logger.info("Added new service listing")
 
                 # Update lastUpdated
                 gist_content["lastUpdated"] = datetime.now().strftime("%Y-%m-%d")
@@ -464,7 +464,7 @@ class NinjaServices(commands.Cog):
                         return True
                     else:
                         logger.error(f"Failed to update gist: {resp.status}")
-                        logger.error(await resp.text())
+                        logger.error("Gist update rejected")
                         return False
 
             except Exception as e:

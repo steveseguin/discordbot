@@ -92,7 +92,7 @@ class NinjaUpdates(commands.Cog):
                         logger.info("Successfully updated gist data")
                     else:
                         logger.error("Error while updating gist data")
-                        logger.error(await gistApiResp.text())
+                        logger.error("Gist update rejected")
             except Exception as E:
                 raise E
     

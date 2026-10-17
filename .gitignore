@@ -1,5 +1,13 @@
 *.7z
 *.zip
+# Private message archives and extracted exports
+/private-archives/
+/exported_data/
+*.log.*
+*.swp
+*.swo
+discordbot.cfg.*
+__pycache__/
 *.log
 .DS_Store
 _*

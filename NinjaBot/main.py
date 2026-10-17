@@ -3,51 +3,16 @@ import asyncio
 import logging
 import pathlib
 import discord.ext.commands
-import logging.handlers
 from discord.ext import commands
 from utils.config import Config
+from utils.loggingSetup import configure_logging
 
 # get local directory as path object
 LOCALDIR = pathlib.Path(__file__).parent.resolve()
 
-# setup logger
-generalLogLevel = logging.DEBUG
-formatter = logging.Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S", style="{")
-
-# rotating log file handler
-rotateFileHnd = logging.handlers.RotatingFileHandler(
-    filename="ninjaBot.log",
-    encoding="utf-8",
-    maxBytes=32 * 1024 * 1024,  # 32 MiB
-    backupCount=5,  # Rotate through 5 files
-)
-rotateFileHnd.setLevel(generalLogLevel)
-rotateFileHnd.setFormatter(formatter)
-
-# cmd output
-streamHnd = logging.StreamHandler()
-streamHnd.setLevel(generalLogLevel)
-streamHnd.setFormatter(formatter)
-
-# discord logger
-dcL = logging.getLogger("discord")
-dcL.propagate = False
-dcL.setLevel(generalLogLevel)
-dcL.addHandler(rotateFileHnd)
-dcL.addHandler(streamHnd)
-
-logging.getLogger("discord.http").setLevel(logging.INFO)
-logging.getLogger("discord.gateway").setLevel(logging.INFO)
-logging.getLogger("discord.client").setLevel(logging.INFO)
-logging.getLogger("discord.webhook").setLevel(logging.INFO)
-
-# NinjaBot logger
-nbL = logging.getLogger("NinjaBot")
-nbL.propagate = False
-nbL.setLevel(generalLogLevel)
-nbL.addHandler(rotateFileHnd)
-nbL.addHandler(streamHnd)
-logger = nbL
+# Message buffers stay in memory; diagnostics never contain message content.
+configure_logging()
+logger = logging.getLogger("NinjaBot")
 
 # disable voice client warning
 discord.VoiceClient.warn_nacl = False
@@ -56,6 +21,7 @@ discord.VoiceClient.warn_nacl = False
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = False
+intents.presences = False
 intents.typing = False
 # configure allowed mentions so bot can't ping @everyone
 mentions = discord.AllowedMentions(everyone=False)
@@ -149,17 +115,17 @@ class NinjaBot(commands.Bot):
 
     # handle some errors. this works for extension commands too so no need to redefine in there
     async def on_command_error(self, ctx, err) -> None:
-        logger.debug(err)
+        logger.debug("Command error", exc_info=(type(err), err, err.__traceback__))
         if isinstance(err, discord.ext.commands.MissingPermissions) \
             or isinstance(err, discord.ext.commands.MissingRole):
             # silently ignore no-permissions errors
-            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without permissions")
+            logger.info("Command rejected: missing permission or role")
         elif isinstance(err, discord.ext.commands.CommandNotFound):
-            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' which is unknown/invalid")
+            logger.info("Unknown command")
         elif isinstance(err, discord.ext.commands.MissingRequiredArgument):
-            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' without providing all required arguments")
+            logger.info("Command rejected: missing argument")
         elif isinstance(err, discord.ext.commands.NoPrivateMessage):
-            logger.info(f"user '{ctx.author.name}' tried to run '{ctx.message.content}' in a private message")
+            logger.info("Command rejected in private message")
         else:
             logger.exception(err)
     
@@ -169,8 +135,7 @@ class NinjaBot(commands.Bot):
             await interaction.response.send_message(str(err), ephemeral=True)
         elif isinstance(err, discord.app_commands.CheckFailure):
             # log check failures
-            logger.info(f"user '{interaction.user.display_name}' tried to run "
-                        f"'{getattr(interaction.command, 'qualified_name', 'Unknown interaction')}' but '{err}'")
+            logger.info("Application command check failed")
             # inform user of their poor choice
             await interaction.response.send_message("You cannot run this command here", ephemeral=True)
         else:

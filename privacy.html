@@ -21,12 +21,12 @@ li { margin-bottom: 8px; }
 <main>
 <nav aria-label="Site navigation"><a href="index.html">Updates</a><a href="terms.html">Terms of Service</a></nav>
 <h1>NinjaBot Privacy Policy</h1>
-<p class="meta"><strong>Effective date:</strong> August 8, 2026</p>
+<p class="meta"><strong>Effective date:</strong> October 17, 2026</p>
 <p class="summary">NinjaBot is a Discord community-support and moderation bot used primarily for VDO.Ninja and Social Stream Ninja. It processes Discord data to operate requested features, protect the community, organize support, and publish authorized community content. We do not sell personal information or use it for advertising.</p>
 
 <h2>1. Operator, protected parties, and scope</h2>
 <p>NinjaBot is operated by <strong>Skindeep.AI Inc.</strong>, a Canadian corporation registered in Ontario and doing business under the registered business name <strong>Ninjafy Inc.</strong> Steve Seguin is the service and privacy contact. VDO.Ninja, Social Stream Ninja, NinjaBot, and SteveSeguin-branded projects are project names or brands and are not separate data controllers unless expressly stated otherwise. In this policy, <strong>Operator</strong> means Skindeep.AI Inc., doing business as Ninjafy Inc. <strong>Protected Parties</strong> means the Operator, Skindeep.AI Inc., Ninjafy Inc., Steve Seguin personally, VDO.Ninja, Social Stream Ninja, NinjaBot, SteveSeguin-branded projects, and their respective current and former directors, officers, employees, contractors, contributors, moderators, volunteers, agents, service providers, licensors, successors, and assigns.</p>
-<p>This policy applies to the NinjaBot Discord application and the related updates page. Discord separately controls the Discord platform and retains data under its own policies. VDO.Ninja and Social Stream Ninja also have separate policies linked below.</p>
+<p>This policy applies to the NinjaBot community-management application (<strong>843169738556571680</strong>) and the related updates page. The separate AI support application (<strong>1465030230107357275</strong>) is not covered by this bot's data-processing description. Discord separately controls the Discord platform and retains data under its own policies. VDO.Ninja and Social Stream Ninja also have separate policies linked below.</p>
 
 <h2>2. Information NinjaBot processes</h2>
 <p>Depending on the feature being used, NinjaBot may process:</p>
@@ -35,33 +35,34 @@ li { margin-bottom: 8px; }
 <li>Message content, replies, commands, embeds, reactions, attachments, attachment URLs, and related timestamps.</li>
 <li>Support and moderation information, including spam indicators, exposed streaming-key patterns, prohibited invite links, moderation actions, and support-thread activity.</li>
 <li>Content submitted for project updates or community service listings when those features are used.</li>
-<li>Operational information such as errors, timestamps, API response status, and bot activity logs.</li>
+<li>Operational diagnostics limited to timestamps, severity, code locations, and error types; these diagnostics exclude message text, attachments, and configuration values.</li>
 </ul>
 
 <h2>3. How information is used</h2>
-<p><strong>Message Content access:</strong> NinjaBot accesses Discord Message Content only to detect spam, prohibited invite links, and exposed streaming keys; process configured commands; create and manage support threads; and administer authorized project-update and community-service-listing workflows. Message content is not used for advertising, user profiling, or direct LLM processing.</p>
+<p><strong>Message Content access:</strong> NinjaBot reads ordinary server messages to compare repeated or similar text across channels and detect attachment and image-link flooding. It also processes prohibited invite links and streaming-key patterns, configured commands, support-thread titles, authorized updates, and approved service submissions. This application does not use message content for advertising, user profiling, AI responses, or training AI or machine-learning models.</p>
 <p>NinjaBot uses this information to:</p>
 <ul>
-<li>Detect spam, remove prohibited invite links, warn users, remove exposed streaming keys, delete abusive messages, and take configured moderation actions.</li>
+<li>Detect spam, remove prohibited invite links, warn users, delete abusive messages, and take configured moderation actions. Streaming-key pattern detection does not currently delete messages.</li>
 <li>Create, title, manage, and archive support threads; run commands; and notify participating support staff.</li>
 <li>Publish authorized project updates and approved community service listings.</li>
 <li>Post configured Reddit and YouTube updates to Discord.</li>
 <li>Diagnose failures, secure the bot, prevent abuse, and maintain service reliability.</li>
 </ul>
 
-<h2>4. Ask the Bot and NinjaClawd</h2>
-<p>NinjaBot does not directly generate LLM answers. When an eligible user explicitly presses <strong>Ask the Bot</strong>, NinjaBot posts a request that invokes NinjaClawd, a different Discord application also operated by Skindeep.AI Inc. under the Ninjafy Inc. business name. NinjaClawd may then process the support thread under its own bot configuration and applicable disclosures. Do not press the button if you do not want the thread handed to NinjaClawd.</p>
+<h2>4. Optional AI support handoff</h2>
+<p>When an eligible user presses <strong>Ask the Bot</strong>, NinjaBot mentions the separate AI support application (<strong>1465030230107357275</strong>, also known as StevesBot or NinjaClawd) with the requesting user's ID and the thread starter's message ID. That application is also operated by the Operator and handles its own support workflow and data processing. NinjaBot does not call an AI provider or build a knowledge index. The handoff is optional; do not press the button if you do not want NinjaBot to request AI support.</p>
 
 <h2>5. Storage and retention</h2>
 <ul>
-<li>Routine anti-spam message content is normally held in memory for roughly 60 seconds, unless the activity triggers moderation or reporting.</li>
-<li>Moderation reports may include message content or attachment details and are retained only while reasonably needed for moderation, abuse prevention, security, dispute resolution, or legal obligations.</li>
-<li>Operational logs rotate based on file size rather than a guaranteed number of days and are deleted through rotation or when no longer reasonably needed for security, diagnostics, abuse prevention, or legal obligations.</li>
+<li>Routine moderation uses an in-memory buffer containing the latest message text and recent message/channel identifiers for each active author. Every two minutes, the bot removes buffers for authors inactive for more than 60 seconds. Active authors' latest text is replaced as new text arrives. The Discord client also keeps a bounded in-memory message cache. Neither cache is written to a message-history file.</li>
+<li>Moderation reports containing message excerpts or attachment details are sent to the staff moderation channel in Discord, where staff can review actions and handle disputes. These reports are not automatically deleted after 30 days.</li>
+<li>New operational diagnostics exclude message text, attachments, and configuration values. Historical system logs may remain until the hosting system's log rotation removes them.</li>
 <li>Authorized updates and approved service listings may be stored in GitHub Gists and displayed publicly while needed for the publishing feature or until corrected or removed.</li>
-<li>Administrators may create security, support, migration, or backup exports of Discord channel history. Such exports must be limited to their stated operational purpose and deleted when no longer reasonably needed, subject to applicable security, dispute-resolution, and legal requirements.</li>
+<li>Previously exported history is retained in a private archive separate from the running bot for archival preservation and recovery. Access is restricted to the Operator. This archive can be retained beyond 30 days and has no automatic deletion schedule; it is not used for routine bot operations or model training. The running management bot does not export channel history.</li>
+<li>Bot configuration, moderator-created command replies, integration cursors, and staff notification preferences remain stored while needed to operate those features.</li>
 <li>Messages and threads retained by Discord remain subject to Discord server settings and Discord's own retention practices.</li>
 </ul>
-<p>Discord API data is not retained longer than reasonably necessary for the purposes described in this policy. Valid deletion requests for information controlled by the Operator are handled promptly, subject to identity verification and retention required by law. Residual copies may remain temporarily in rotating backups until overwritten in the ordinary backup cycle and will not be used for ordinary operations.</p>
+<p>To request access, correction, or deletion of information controlled by the Operator, email <a href="mailto:steve@seguin.email">steve@seguin.email</a> with your Discord user ID and the relevant message or listing links. Requests are reviewed promptly, including whether they concern a published listing, a moderation report, or archived data. The archive is separate from the running service and does not follow the in-memory buffer's expiry schedule.</p>
 
 <h2>6. Sharing and service providers</h2>
 <p>Information may be shared only as needed to operate selected features, comply with law, or protect users and services. Relevant providers and integrations may include Discord, GitHub/Gists, Reddit, YouTube/Google APIs, project-operated image caching, hosting and network providers, and NinjaClawd as a separate related application. Third-party providers' own terms and privacy policies apply to their services.</p>
@@ -71,7 +72,7 @@ li { margin-bottom: 8px; }
 <p>Messages posted by authorized users in configured update channels may be republished on the public updates site. Approved service submissions may also be published publicly. Do not submit information through those workflows that you do not want made public.</p>
 
 <h2>8. User choices and requests</h2>
-<p>You can avoid optional bot interactions, refrain from pressing Ask the Bot, delete Discord messages where Discord permits, or contact us to request access, correction, or deletion of personal information controlled by the Operator. The Operator may need to verify your identity and may decline, limit, or redact a request where permitted or required by law, including to protect another person's privacy, security, confidential information, legal privilege, or the integrity of an investigation. Some information may be retained where reasonably necessary for security, abuse prevention, dispute resolution, legal compliance, backups, or preserving the integrity of public records.</p>
+<p>You can avoid optional bot interactions, refrain from pressing Ask the Bot, delete Discord messages where Discord permits, or contact us to request access, correction, or deletion of personal information controlled by the Operator. Server administrators can restrict the bot's channel access or remove it. Automated moderation applies to eligible messages in channels the bot can access; there is no individual moderation bypass. The Operator may need to verify your identity and may decline, limit, or redact a request where permitted or required by law, including to protect another person's privacy, security, confidential information, legal privilege, or the integrity of an investigation. Some information may be retained where reasonably necessary for security, abuse prevention, dispute resolution, legal compliance, backups, or preserving the integrity of public records.</p>
 
 <h2>9. Security and children</h2>
 <p>Reasonable measures are used to protect bot credentials and stored information, but no networked service is perfectly secure. Do not post passwords, API keys, stream keys, or other sensitive information. Users must be old enough to use Discord and the relevant project services; VDO.Ninja is intended for users aged 16 or older.</p>
