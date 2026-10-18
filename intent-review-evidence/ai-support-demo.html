@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NinjaBot AI support demonstration</title>
+<style>body{margin:0;background:#101724;color:#e8edf5;font:16px/1.6 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:28px 22px 60px}h1,h2{line-height:1.25}h2{margin-top:2rem}a{color:#84e1cd}video,img{display:block;width:100%;height:auto;background:#19191f;border-radius:8px}figure{margin:24px 0}figcaption,.meta{color:#bdcadb;font-size:.95rem}li{margin:.5rem 0}</style>
+</head>
+<body><main>
+<h1>NinjaBot AI support demonstration</h1>
+<p class="meta">AI support application: <strong>1465030230107357275</strong> · Recorded October 17, 2026</p>
+<p>NinjaBot helps troubleshoot VDO.Ninja, Social Stream Ninja, and Raspberry Ninja in designated support conversations. A question can span the thread starter, later details, screenshots, attempted fixes, and replies from several participants.</p>
+<h2>Watch the bot answer in Discord</h2>
+<p>This recording shows a controlled support conversation in the community's test channel. Steve supplies an example VDO.Ninja problem and a follow-up; the deployed AI bot replies in the actual Discord interface. The example stream ID is fictional.</p>
+<video controls preload="metadata" playsinline poster="ai-follow-up-answer.jpg"><source src="ai-support-demo.mp4" type="video/mp4">Use the download link to watch the recording.</video>
+<p><a href="ai-support-demo.mp4">Download the screen recording</a> · <a href="ai-support-response.jpg">Open the conversation screenshot</a> · <a href="ai-follow-up-answer.jpg">Open the follow-up screenshot</a></p>
+<h2>Why the conversation requires Message Content</h2>
+<p>The bot is operating in temporary mention-and-interaction mode while Message Content access is unavailable. The screenshots show the difference between requesting help and supplying the surrounding conversation:</p>
+<ol>
+<li>The initial question is posted as an ordinary thread message. The support buttons identify the product and platform, but do not provide that message's content to the bot.</li>
+<li>The bot asks for the missing problem description, even though the question is visible to participants in Discord.</li>
+<li>Steve repeats the problem in a direct mention. The bot can then answer that invoking message and a directly mentioned follow-up.</li>
+</ol>
+<p>Message Content is requested so the bot can use the existing question and relevant unmentioned follow-ups and attachments, without requiring participants to copy them into each invocation. Slash-command options, buttons, and a selected context-menu message do not supply the rest of a multi-message troubleshooting conversation.</p>
+<figure><a href="ai-support-response.jpg"><img src="ai-support-response.jpg" alt="Actual Discord conversation showing an ordinary question, the bot asking for unavailable context, and a successful direct mention response"></a><figcaption>Original question, follow-up details, and direct support response.</figcaption></figure>
+<figure><a href="ai-follow-up-answer.jpg"><img src="ai-follow-up-answer.jpg" alt="NinjaBot answers a directly mentioned VDO.Ninja follow-up and links to relevant documentation"></a><figcaption>The bot answers the follow-up using relevant project documentation.</figcaption></figure>
+<h2>Data handling</h2>
+<p>Working databases, attachments, and logs use encrypted storage. Raw support content expires at 28 days through hourly cleanup; useful technical knowledge is summarized separately before expiry and anonymized for retrieval. Discord message content is not used to train or fine-tune models.</p>
+<p><a href="../ai-privacy.html">AI support privacy policy</a> · <a href="mailto:steve@seguin.email">Privacy and deletion requests</a></p>
+<p class="meta">This evidence concerns the AI support application. The separate community-management bot is application 843169738556571680.</p>
+</main></body></html>

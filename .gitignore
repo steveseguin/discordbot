@@ -3,6 +3,8 @@
 # Private message archives and extracted exports
 /private-archives/
 /exported_data/
+# Local encryption keys and recovery files (never commit)
+/private-keys/
 *.log.*
 *.swp
 *.swo

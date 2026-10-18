@@ -6,6 +6,7 @@ This repository runs the community-management bot (application `8431697385565716
 
 - [NinjaBot Privacy Policy](https://updates.vdo.ninja/privacy.html)
 - [NinjaBot Terms of Service](https://updates.vdo.ninja/terms.html)
+- [Separate AI support bot privacy policy](https://updates.vdo.ninja/ai-privacy.html)
 
 ![Contributors](https://contrib.rocks/image?repo=steveseguin/discordbot)
 
