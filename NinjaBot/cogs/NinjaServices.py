@@ -477,7 +477,7 @@ class NinjaServices(commands.Cog):
         """Remove a service listing by Discord username"""
 
         # Check if user is an approved reviewer
-        if str(interaction.user.id) not in self.bot.config.get("servicesApprovers", []):
+        if str(interaction.user.id) not in (self.bot.config.get("servicesApprovers") or []):
             await interaction.response.send_message("You don't have permission to remove service listings.", ephemeral=True)
             return
 
