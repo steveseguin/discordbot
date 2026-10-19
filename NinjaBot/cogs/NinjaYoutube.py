@@ -19,6 +19,7 @@ class NinjaYoutube(commands.Cog):
     @tasks.loop(hours=1)
     async def youtubeChecker(self) -> None:
         logger.debug("Running youtube checker")
+        toPostVideos = []
 
         try:
             request = self.youtube.search().list(
@@ -35,7 +36,6 @@ class NinjaYoutube(commands.Cog):
 
             if response and response["kind"] == "youtube#searchListResponse" and "items" in response and response["items"]:
                 postedVideos = self.bot.config.get("youtubePostedVideo") or []
-                toPostVideos = []
                 logger.debug(f"Posted videos so far: '{postedVideos}'")
                 logger.debug(response["items"])
                 for video in response["items"]:
