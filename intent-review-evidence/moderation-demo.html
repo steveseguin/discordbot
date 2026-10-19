@@ -11,29 +11,32 @@ body{margin:0;background:#101724;color:#e8edf5;font:16px/1.6 system-ui,sans-seri
 <body><main>
 <h1>NinjaBot custom moderation</h1>
 <p class="meta">Community-management application <code>843169738556571680</code> · VDO.Ninja and Social Stream Ninja</p>
-<p>NinjaBot evaluates ordinary messages for repeated text across channels and attachment/image-link flooding. These checks run without requiring the sender to invoke the bot.</p>
+<p>NinjaBot checks ordinary messages for repeated spam across channels and rapid bursts of attachments or image links. People do not have to mention the bot or use a command for these checks to work.</p>
 <h2>Watch attachment flooding being moderated</h2>
 <p>Six attachment messages arrive within 30 seconds. The first five remain; the sixth is removed and a temporary warning appears.</p>
 <video controls preload="metadata" playsinline aria-label="Discord attachment flooding demonstration"><source src="moderation-demo.mp4" type="video/mp4">Download the recording using the link below.</video>
 <p><a href="moderation-demo.mp4">Download MP4</a> · <a href="moderation-demo.gif">View animated recording</a></p>
-<p class="method">Controlled demonstration using the unchanged moderation handler with synthetic member inputs backed by real Discord test posts. The recording shows the actual Discord interface; deletions and warnings occur in Discord. No accounts are removed.</p>
-<h2>The content-dependent rules</h2>
+<p class="method">This controlled test uses the same moderation code as the running bot. Simulated member messages are tied to real Discord test posts, so the deletions and warnings shown happen in Discord. No accounts are kicked during the demonstration.</p>
+<h2>The two spam checks</h2>
 <ol>
 <li><strong>Attachment/image-link rate:</strong> for each author in each channel, count messages containing attachments or supported image links during the preceding 30 seconds. Delete messages beyond five and warn on the sixth. Text-only messages without supported image links do not increment this counter. Each qualifying message counts once, regardless of its number of attachments.</li>
-<li><strong>Text similarity across channels:</strong> compare the current text with the author's previous tracked text using SIFT4. When tracked activity spans multiple channels, identical text adds 1.5 abuse points and distance-1 text adds 1 point. A score of 3 triggers message cleanup and a kick. Bots and trusted staff/sponsor roles are excluded.</li>
+<li><strong>Repeated text across channels:</strong> compare a person's new message with their previous message. When their recent activity spans multiple channels, identical or almost identical text increases a spam score. Repeated violations lead to message removal and a kick. This catches repeated text even when it contains no banned words. Bots and trusted staff/sponsor roles are excluded.</li>
 </ol>
 <p><a href="https://github.com/steveseguin/discordbot/blob/671084dcb8af31dfa6b445fd28b1bf39a8a2a104/NinjaBot/cogs/NinjaAntiSpam.py#L79-L159">Read the text-comparison and attachment-counter implementation</a>. The separate three-channel activity rule uses channel IDs and does not itself need Message Content.</p>
-<h2>Why interaction inputs and AutoMod do not supply these checks</h2>
+<h2>What stops working without Message Content?</h2>
+<p>Discord sends ordinary message events with empty text and attachment lists. NinjaBot can tell that someone posted, but cannot tell what they wrote or whether they attached a file.</p>
+<ul><li><strong>No text to compare:</strong> the bot cannot distinguish repeated spam from different, legitimate messages.</li><li><strong>No way to identify attachment or image-link messages:</strong> the bot cannot tell which messages belong in the 30-second count. Counting every message instead would also penalize normal text conversations.</li></ul>
+<h2>Why commands and AutoMod do not replace these checks</h2>
 <table>
 <thead><tr><th scope="col">Alternative</th><th scope="col">What the custom checks require</th></tr></thead>
 <tbody>
-<tr><td>Slash commands, mentions, DMs, and message commands</td><td>Moderation must evaluate unsolicited messages even when their author never invokes the app. User-selected inputs do not provide this stream of ordinary text and attachments.</td></tr>
-<tr><td>Keyword and regex rules</td><td>The repetition check compares successive messages, rather than matching each message against a predetermined word or pattern.</td></tr>
-<tr><td>Generic spam and mention-spam rules</td><td>Discord's documented AutoMod configuration does not expose this SIFT4 comparison or a per-author, per-channel counter combining attachment messages and supported image links over 30 seconds.</td></tr>
+<tr><td>Slash commands, mentions, DMs, and message commands</td><td>These tools require someone to send or select a message for the bot. People posting spam do not have to do that, so these tools cannot replace automatic checks on ordinary messages.</td></tr>
+<tr><td>Keyword and regex rules</td><td>A repeated message can contain no banned words. NinjaBot compares what a person posted with what they posted before.</td></tr>
+<tr><td>Generic spam and mention-spam rules</td><td>Discord's documented settings do not let us configure these comparisons between a person's recent messages or this combined attachment/image-link limit over 30 seconds.</td></tr>
 </tbody></table>
 <p>Discord documents the relevant <a href="https://docs.discord.com/developers/gateway/you-might-not-need-a-privileged-intent#message-content-intent">message-content fields and alternatives</a> and <a href="https://docs.discord.com/developers/resources/auto-moderation#trigger-types">AutoMod triggers and configuration</a>.</p>
 <h2>Limited moderation data</h2>
-<p>The moderation buffer stays in memory. New text replaces the author's previous tracked text. Every two minutes, the bot removes buffers for authors inactive for more than 60 seconds. Staff moderation reports remain inside Discord; the management bot does not keep a message-history archive or use these messages for AI responses or model training.</p>
+<p>Moderation checks use temporary memory, not a saved chat archive. New text replaces the previous text being compared. Every two minutes, the bot clears records for people inactive for more than 60 seconds. Staff moderation reports remain inside Discord; the management bot does not keep a message-history archive or use these messages for AI responses or model training.</p>
 <p><a href="../privacy.html">Management bot privacy policy</a> · <a href="https://github.com/steveseguin/discordbot/tree/main/intent-review-evidence">Moderation details</a></p>
 <p class="meta">The separate AI support application is <code>1465030230107357275</code>.</p>
 </main></body></html>
