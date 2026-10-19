@@ -14,7 +14,7 @@ The recording shows six test attachment messages arriving in Discord, the sixth 
 
 The bot compares a person's new message with their previous message. When their recent activity spans multiple channels, identical or almost identical text increases a spam score. Repeated violations lead to message removal and a kick. This catches repeated text even when it contains no banned words. Bots and trusted staff/sponsor roles are excluded. The linked source contains the exact comparison and scoring rules.
 
-This comparison needs the text of ordinary messages, including messages that never mention or invoke the bot. The separate three-channel activity rule uses channel IDs and does not itself require message content.
+This comparison needs the text of ordinary messages, including messages that never mention or invoke the bot.
 
 ## What stops working without Message Content?
 
